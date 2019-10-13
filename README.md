@@ -58,6 +58,7 @@ On the first startup a config file (`~/.config/mntray/settings.json`) is created
 	"ArticlesFile": "/home/moson/.config/mntray/articles.json",
 	"ReconnectInterval": 10,
 	"NumberOfRetries": 5
+	"HideNoNews": false
 }
 ```
 
@@ -69,6 +70,7 @@ Categories| The categories you want to get announcements for</br>Remove unwanted
 ArticlesFile| Path to the local file with news articles|
 ReconnectInterval| If the connection to the server is lost, mntray will try to reconnect with this interval (in seconds)|
 NumberOfRetries| Number of retries before mntray gives up trying to reconnect if the connection is lost|
+HideNoNews| When set to "true", the tray icon is hidden when all news have been read|
 </br>
 
 ## Dependencies

@@ -2,7 +2,6 @@ package tray
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -52,19 +51,10 @@ func (ti *trayIcon) waitForNews() {
 
 			err := con.ReadJSON(a)
 			if err != nil {
-				if strings.Contains(err.Error(), "use of closed network connection") {
-					return
-				}
-				cerr, ok := err.(*websocket.CloseError)
-				if ok && cerr.Code == 1006 {
-					fmt.Println("Error: Server shut down unexpectedly...")
-					ti.waitForNews()
-					return
-				}
-				fmt.Println("Error reading JSON: " + err.Error())
+				fmt.Println("Error: " + err.Error())
+				ti.waitForNews()
 				return
 			}
-
 			ti.receivedNews(*a, false)
 		}
 	}()

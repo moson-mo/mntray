@@ -42,6 +42,7 @@ type trayIcon struct {
 	icoUnchecked *gui.QIcon
 	icoExit      *gui.QIcon
 	sigc         chan os.Signal
+	lastMenuItem *menuItem
 }
 
 func Run() error {
@@ -111,6 +112,7 @@ func newIcon(app *ui.QApplication, conf *settings) *trayIcon {
 
 		// show bubble for unread articles
 		if !fromFile && !a.WasRead && ti.containsArticle(a) {
+			ti.lastMenuItem = &mi
 			ti.icon.ShowMessage2("Manjaro News - New article", a.Title, ti.icoNew, 5000)
 		}
 	})
@@ -119,6 +121,14 @@ func newIcon(app *ui.QApplication, conf *settings) *trayIcon {
 		ti.tiredConnecting()
 	})
 
+	ti.icon.ConnectMessageClicked(func() {
+		if ti.lastMenuItem != nil {
+			ti.openArticle(ti.lastMenuItem.news)
+			ti.lastMenuItem.item.SetIcon(ti.icoChecked)
+		}
+	})
+
+	// check for os signals and save articles to disk when app is killed.
 	ti.sigc = make(chan os.Signal, 1)
 	signal.Notify(ti.sigc,
 		syscall.SIGHUP,
@@ -153,12 +163,17 @@ func (ti *trayIcon) createNewsMenu() {
 	ti.icon.SetContextMenu(menu)
 }
 
+// saves articles to disk and quits the application
 func (ti *trayIcon) saveAndQuit() {
 	articles := make([]article, len(ti.items))
 	for i := range ti.items {
 		articles[i] = ti.items[i].news
 	}
 	ti.config.SaveArticles(articles)
+	err := ti.config.SaveSettings()
+	if err != nil {
+		fmt.Println("Could not save settings: " + err.Error())
+	}
 	ti.app.Quit()
 }
 
@@ -184,14 +199,18 @@ func (ti *trayIcon) addMenuItem(a article) *ui.QAction {
 		if !checked {
 			item.SetIcon(ti.icoChecked)
 		}
-		ti.markRead(a)
-		fmt.Println("Opened item: " + a.Title)
-
-		com := exec.Command("xdg-open", a.URL)
-		com.Start()
-
+		ti.openArticle(a)
 	})
 	return item
+}
+
+// opens the article in the default browser
+func (ti *trayIcon) openArticle(a article) {
+	ti.markRead(a)
+	fmt.Println("Opened item: " + a.Title)
+
+	com := exec.Command("xdg-open", a.URL)
+	com.Start()
 }
 
 // called when we got news from the server
@@ -227,7 +246,7 @@ func (ti *trayIcon) getInsertPosition(a article) *ui.QAction {
 	return pos
 }
 
-// marks an article as read
+// marks an article as read and update the trayicon
 func (ti *trayIcon) markRead(a article) {
 	for i := range ti.items {
 		if ti.items[i].news.GUID == a.GUID {
@@ -257,15 +276,24 @@ func (ti *trayIcon) cleanupMenu() {
 func (ti *trayIcon) setTrayIcon() {
 	for _, i := range ti.items {
 		if !i.news.WasRead {
+			if ti.config.HideNoNews {
+				ti.icon.Show()
+			}
 			ti.icon.SetIcon(ti.icoNew)
 			return
 		}
+	}
+	if ti.config.HideNoNews {
+		ti.icon.Hide()
 	}
 	ti.icon.SetIcon(ti.ico)
 }
 
 // connection could not be made, add item to let user reconnect
 func (ti *trayIcon) tiredConnecting() {
+	if ti.config.HideNoNews {
+		ti.icon.Show()
+	}
 	ti.icon.ShowMessage2("Manjaro News - Connection lost", "Connection lost, try to reconnect manually.", gui.NewQIcon5(":assets/images/manjaro64.png"), 5000)
 	a := ui.NewQAction2("Reconnect... (connection lost)", ti.newsMenu)
 	a.SetIcon(gui.QIcon_FromTheme("view-refresh"))
@@ -274,5 +302,8 @@ func (ti *trayIcon) tiredConnecting() {
 		// try reconnecting and remove menu entry
 		ti.waitForNews()
 		a.DestroyQAction()
+		if ti.config.HideNoNews {
+			ti.icon.Hide()
+		}
 	})
 }

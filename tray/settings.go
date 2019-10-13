@@ -16,6 +16,7 @@ const (
 	maxItems      = 10
 	retryInterval = 10
 	numberRetries = 5
+	hideWhenRead  = false
 )
 
 // default categories
@@ -31,6 +32,7 @@ type settings struct {
 	ArticlesFile      string
 	ReconnectInterval int
 	NumberOfRetries   int
+	HideNoNews        bool
 }
 
 // NewSettings creates settings with default config if not yet existing
@@ -42,6 +44,7 @@ func NewSettings() (*settings, error) {
 		Categories:        categories,
 		ReconnectInterval: retryInterval,
 		NumberOfRetries:   numberRetries,
+		HideNoNews:        hideWhenRead,
 	}
 	d, err := createConfigDir()
 	if err != nil {
