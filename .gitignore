@@ -1,0 +1,6 @@
+moc*
+rcc.cpp
+rcc_cgo*
+deploy
+linux
+.vscode
