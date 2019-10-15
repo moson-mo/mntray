@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"os/signal"
 	"sort"
 	"sync"
-	"syscall"
 
 	"github.com/therecipe/qt/core"
 
@@ -43,6 +41,7 @@ type trayIcon struct {
 	icoExit      *gui.QIcon
 	sigc         chan os.Signal
 	lastMenuItem *menuItem
+	quit         *sync.WaitGroup
 }
 
 func Run() error {
@@ -128,19 +127,6 @@ func newIcon(app *ui.QApplication, conf *settings) *trayIcon {
 		}
 	})
 
-	// check for os signals and save articles to disk when app is killed.
-	ti.sigc = make(chan os.Signal, 1)
-	signal.Notify(ti.sigc,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
-	go func() {
-		s := <-ti.sigc
-		fmt.Println("Signal received: " + s.String())
-		ti.saveAndQuit()
-	}()
-
 	return &ti
 }
 
@@ -163,8 +149,8 @@ func (ti *trayIcon) createNewsMenu() {
 	ti.icon.SetContextMenu(menu)
 }
 
-// saves articles to disk and quits the application
-func (ti *trayIcon) saveAndQuit() {
+// save articles and settings to disk
+func (ti *trayIcon) save() {
 	articles := make([]article, len(ti.items))
 	for i := range ti.items {
 		articles[i] = ti.items[i].news
@@ -174,6 +160,11 @@ func (ti *trayIcon) saveAndQuit() {
 	if err != nil {
 		fmt.Println("Could not save settings: " + err.Error())
 	}
+}
+
+// saves articles to disk and quits the application
+func (ti *trayIcon) saveAndQuit() {
+	ti.save()
 	ti.app.Quit()
 }
 
@@ -211,6 +202,7 @@ func (ti *trayIcon) openArticle(a article) {
 
 	com := exec.Command("xdg-open", a.URL)
 	com.Start()
+	ti.save()
 }
 
 // called when we got news from the server

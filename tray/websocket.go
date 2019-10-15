@@ -26,7 +26,7 @@ type article struct {
 // connect to server and wait for responses
 func (ti *trayIcon) waitForNews() {
 	go func() {
-		// try to connect, if not successfull, retry every according to settings
+		// try to connect, if not successfull, retry every x seconds according to settings
 		cnt := 1
 		for {
 			err := ti.connect()

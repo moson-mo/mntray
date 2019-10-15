@@ -43,6 +43,7 @@ For further information & cross compilation options please have a look at [this 
 ## Configuration
 
 On the first startup a config file (`~/.config/mntray/settings.json`) is created with some default settings.
+When you want to chang settings, make sure the app is not running since it will save settings on exit and overwrite your changes.
 
 ```
 {
@@ -93,3 +94,10 @@ HideNoNews| When set to "true", the tray icon is hidden when all news have been 
 ![kde notification](https://github.com/moson-mo/mntray/raw/master/screenshots/kde_notification.png?inline=true)
 ![gnome notification](https://github.com/moson-mo/mntray/raw/master/screenshots/gnome_notification.png?inline=true)
 
+## Thanks to
+
+* The Manjaro Team for the great distro
+* The Manjaro community for testing and feedback
+* bogdancovaciu (from the Manjaro forums) for providing the icons
+* therecipe for the Qt binding library
+* The ones I forgot to mention here :)
