@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'moc.cpp'
 **
-** Created by: The Qt Meta Object Compiler version 67 (Qt 5.13.0)
+** Created by: The Qt Meta Object Compiler version 67 (Qt 5.13.1)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
@@ -12,7 +12,7 @@
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'moc.cpp' doesn't include <QObject>."
 #elif Q_MOC_OUTPUT_REVISION != 67
-#error "This file was generated using the moc from 5.13.0. It"
+#error "This file was generated using the moc from 5.13.1. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
@@ -20,18 +20,18 @@
 QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
-struct qt_meta_stringdata_SystemTrayIcon2a00b6_t {
+struct qt_meta_stringdata_SystemTrayIcond8a073_t {
     QByteArrayData data[7];
     char stringdata0[62];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
-    qptrdiff(offsetof(qt_meta_stringdata_SystemTrayIcon2a00b6_t, stringdata0) + ofs \
+    qptrdiff(offsetof(qt_meta_stringdata_SystemTrayIcond8a073_t, stringdata0) + ofs \
         - idx * sizeof(QByteArrayData)) \
     )
-static const qt_meta_stringdata_SystemTrayIcon2a00b6_t qt_meta_stringdata_SystemTrayIcon2a00b6 = {
+static const qt_meta_stringdata_SystemTrayIcond8a073_t qt_meta_stringdata_SystemTrayIcond8a073 = {
     {
-QT_MOC_LITERAL(0, 0, 20), // "SystemTrayIcon2a00b6"
+QT_MOC_LITERAL(0, 0, 20), // "SystemTrayIcond8a073"
 QT_MOC_LITERAL(1, 21, 11), // "triggerSlot"
 QT_MOC_LITERAL(2, 33, 0), // ""
 QT_MOC_LITERAL(3, 34, 8), // "quintptr"
@@ -40,12 +40,12 @@ QT_MOC_LITERAL(5, 45, 1), // "b"
 QT_MOC_LITERAL(6, 47, 14) // "connectionDead"
 
     },
-    "SystemTrayIcon2a00b6\0triggerSlot\0\0"
+    "SystemTrayIcond8a073\0triggerSlot\0\0"
     "quintptr\0a\0b\0connectionDead"
 };
 #undef QT_MOC_LITERAL
 
-static const uint qt_meta_data_SystemTrayIcon2a00b6[] = {
+static const uint qt_meta_data_SystemTrayIcond8a073[] = {
 
  // content:
        8,       // revision
@@ -69,10 +69,10 @@ static const uint qt_meta_data_SystemTrayIcon2a00b6[] = {
        0        // eod
 };
 
-void SystemTrayIcon2a00b6::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+void SystemTrayIcond8a073::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c == QMetaObject::InvokeMetaMethod) {
-        auto *_t = static_cast<SystemTrayIcon2a00b6 *>(_o);
+        auto *_t = static_cast<SystemTrayIcond8a073 *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->triggerSlot((*reinterpret_cast< quintptr(*)>(_a[1])),(*reinterpret_cast< bool(*)>(_a[2]))); break;
@@ -82,30 +82,30 @@ void SystemTrayIcon2a00b6::qt_static_metacall(QObject *_o, QMetaObject::Call _c,
     }
 }
 
-QT_INIT_METAOBJECT const QMetaObject SystemTrayIcon2a00b6::staticMetaObject = { {
+QT_INIT_METAOBJECT const QMetaObject SystemTrayIcond8a073::staticMetaObject = { {
     &QSystemTrayIcon::staticMetaObject,
-    qt_meta_stringdata_SystemTrayIcon2a00b6.data,
-    qt_meta_data_SystemTrayIcon2a00b6,
+    qt_meta_stringdata_SystemTrayIcond8a073.data,
+    qt_meta_data_SystemTrayIcond8a073,
     qt_static_metacall,
     nullptr,
     nullptr
 } };
 
 
-const QMetaObject *SystemTrayIcon2a00b6::metaObject() const
+const QMetaObject *SystemTrayIcond8a073::metaObject() const
 {
     return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
 }
 
-void *SystemTrayIcon2a00b6::qt_metacast(const char *_clname)
+void *SystemTrayIcond8a073::qt_metacast(const char *_clname)
 {
     if (!_clname) return nullptr;
-    if (!strcmp(_clname, qt_meta_stringdata_SystemTrayIcon2a00b6.stringdata0))
+    if (!strcmp(_clname, qt_meta_stringdata_SystemTrayIcond8a073.stringdata0))
         return static_cast<void*>(this);
     return QSystemTrayIcon::qt_metacast(_clname);
 }
 
-int SystemTrayIcon2a00b6::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+int SystemTrayIcond8a073::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
 {
     _id = QSystemTrayIcon::qt_metacall(_c, _id, _a);
     if (_id < 0)

@@ -1,5 +1,9 @@
 # mntray
 ## A Manjaro Linux announcements notification app
+</br>
+
+[logo](https://github.com/moson-mo/mntray/raw/master/screenshots/logo.png?inline=true)
+</br>
 
 A small app which informs about announcements from manjaro.\
 It creates a tray icon with a menu showing the latest announcements from the Manjaro forum RSS feed.
@@ -98,6 +102,7 @@ HideNoNews| When set to "true", the tray icon is hidden when all news have been 
 
 * The Manjaro Team for the great distro
 * The Manjaro community for testing and feedback
-* bogdancovaciu (from the Manjaro forums) for providing the icons
+* [bogdancovaciu](https://github.com/bogdancovaciu) for providing the icons
+* [SGS](https://github.com/sgse) for providing the app logo
 * therecipe for the Qt binding library
 * The ones I forgot to mention here :)
