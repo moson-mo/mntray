@@ -1,8 +1,7 @@
+<img src="https://github.com/moson-mo/mntray/raw/master/screenshots/logo.png?inline=true"  align="left" width="120" />
+
 # mntray
 ## A Manjaro Linux announcements notification app
-</br>
-
-[logo](https://github.com/moson-mo/mntray/raw/master/screenshots/logo.png?inline=true)
 </br>
 
 A small app which informs about announcements from manjaro.\
@@ -104,5 +103,5 @@ HideNoNews| When set to "true", the tray icon is hidden when all news have been 
 * The Manjaro community for testing and feedback
 * [bogdancovaciu](https://github.com/bogdancovaciu) for providing the icons
 * [SGS](https://github.com/sgse) for providing the app logo
-* therecipe for the Qt binding library
+* [therecipe](https://github.com/therecipe) for the Qt binding library
 * The ones I forgot to mention here :)
