@@ -1,6 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-<file>assets/images/m64.png</file>
-<file>assets/images/m64n.png</file>
+<file>assets/images/mntray-news.png</file>
+<file>assets/images/mntray-regular.png</file>
 </qresource>
 </RCC>

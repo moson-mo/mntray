@@ -7,15 +7,15 @@
 A small app which informs about announcements from manjaro.\
 It creates a tray icon with a menu showing the latest announcements from the Manjaro forum RSS feed.
 
-Announcements are retrieved from a WebSocket server (see [mnservice](https://github.com/moson-mo/mnservice/)) 
+Announcements are retrieved from a http server (see [mnserver](https://github.com/moson-mo/mnserver/)) via post request.
 
 This project is based on [Qt](https://www.qt.io) and the [Qt binding package](https://github.com/therecipe/qt) for golang.\
 In order to run this app the `qt5-base` package needs to be installed on your system.
 
 Why is it connecting to a server application rather then parsing the RSS feed directly?\
 The RSS feed can be quite large (around 300 to 500 KB).\
-Instead of downloading this file from the Manjaro forums host on a regular basis, it sets up a websocket connection and waits for the server to push the required data to the client.\
-So there's much less data to be transferred and less burden on the forum host and client.
+Instead of downloading this file from the Manjaro forums host on a regular basis, it fetches news from mnserver.\
+There's much less data to be transferred and less burden on the forum host and client since the data is stripped down to the bare minimum.
 </br>
 
 ## How to install
@@ -50,7 +50,7 @@ When you want to chang settings, make sure the app is not running since it will 
 
 ```
 {
-	"URL": "ws://manjaro.moson.eu:6666/articles",
+	"ServerURL": "http://manjaro.moson.eu:10111/news",
 	"MaxArticles": 10,
 	"Categories": [
 		"Testing Updates",
@@ -60,9 +60,10 @@ When you want to chang settings, make sure the app is not running since it will 
 		"manjaro32"
 	],
 	"ArticlesFile": "/home/moson/.config/mntray/articles.json",
-	"ReconnectInterval": 10,
-	"NumberOfRetries": 5
-	"HideNoNews": false
+	"RefreshInterval": 600,
+	"HideNoNews": false,
+	"Autostart": true,
+	"ErrorNotifications": true
 }
 ```
 
@@ -72,15 +73,15 @@ URL| WebSocket URL of the mnservice server|
 MaxArticles| The maximum number of articles to retrieve / show in the menu|
 Categories| The categories you want to get announcements for</br>Remove unwanted categories if needed|
 ArticlesFile| Path to the local file with news articles|
-ReconnectInterval| If the connection to the server is lost, mntray will try to reconnect with this interval (in seconds)|
-NumberOfRetries| Number of retries before mntray gives up trying to reconnect if the connection is lost|
+RefreshInterval| The interval (in seconds) in which mntray will check for new articles|
+Autostart| Places a .desktop file in the users autostart folder when "true"|
 HideNoNews| When set to "true", the tray icon is hidden when all news have been read|
+ErrorNotifications| Show a notification in case articles can not be retrieved (f.e. network down)|
 </br>
 
 ## Dependencies
 
 * [qt](https://github.com/therecipe/qt) - Qt binding for Go
-* [websocket](https://github.com/gorilla/websocket) - WebSocket implementation for Go
 </br>
 
 ## Screenshots

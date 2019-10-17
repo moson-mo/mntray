@@ -6,6 +6,7 @@ package tray
 //#include "moc.h"
 import "C"
 import (
+	"errors"
 	"runtime"
 	"strings"
 	"unsafe"
@@ -134,20 +135,20 @@ func (ptr *SystemTrayIcon) TriggerSlot(a article, b bool) {
 }
 
 //export callbackSystemTrayIcond8a073_ConnectionDead
-func callbackSystemTrayIcond8a073_ConnectionDead(ptr unsafe.Pointer) {
+func callbackSystemTrayIcond8a073_ConnectionDead(ptr unsafe.Pointer, err C.struct_Moc_PackedString) {
 	if signal := qt.GetSignal(ptr, "connectionDead"); signal != nil {
-		(*(*func())(signal))()
+		(*(*func(error))(signal))(errors.New(cGoUnpackString(err)))
 	}
 
 }
 
-func (ptr *SystemTrayIcon) ConnectConnectionDead(f func()) {
+func (ptr *SystemTrayIcon) ConnectConnectionDead(f func(err error)) {
 	if ptr.Pointer() != nil {
 
 		if signal := qt.LendSignal(ptr.Pointer(), "connectionDead"); signal != nil {
-			f := func() {
-				(*(*func())(signal))()
-				f()
+			f := func(err error) {
+				(*(*func(error))(signal))(err)
+				f(err)
 			}
 			qt.ConnectSignal(ptr.Pointer(), "connectionDead", unsafe.Pointer(&f))
 		} else {
@@ -163,9 +164,53 @@ func (ptr *SystemTrayIcon) DisconnectConnectionDead() {
 	}
 }
 
-func (ptr *SystemTrayIcon) ConnectionDead() {
+func (ptr *SystemTrayIcon) ConnectionDead(err error) {
 	if ptr.Pointer() != nil {
-		C.SystemTrayIcond8a073_ConnectionDead(ptr.Pointer())
+		errC := C.CString(func() string {
+			tmp := err
+			if tmp != nil {
+				return tmp.Error()
+			}
+			return ""
+		}())
+		defer C.free(unsafe.Pointer(errC))
+		C.SystemTrayIcond8a073_ConnectionDead(ptr.Pointer(), C.struct_Moc_PackedString{data: errC, len: C.longlong(-1)})
+	}
+}
+
+//export callbackSystemTrayIcond8a073_HideIcon
+func callbackSystemTrayIcond8a073_HideIcon(ptr unsafe.Pointer) {
+	if signal := qt.GetSignal(ptr, "hideIcon"); signal != nil {
+		(*(*func())(signal))()
+	}
+
+}
+
+func (ptr *SystemTrayIcon) ConnectHideIcon(f func()) {
+	if ptr.Pointer() != nil {
+
+		if signal := qt.LendSignal(ptr.Pointer(), "hideIcon"); signal != nil {
+			f := func() {
+				(*(*func())(signal))()
+				f()
+			}
+			qt.ConnectSignal(ptr.Pointer(), "hideIcon", unsafe.Pointer(&f))
+		} else {
+			qt.ConnectSignal(ptr.Pointer(), "hideIcon", unsafe.Pointer(&f))
+		}
+	}
+}
+
+func (ptr *SystemTrayIcon) DisconnectHideIcon() {
+	if ptr.Pointer() != nil {
+
+		qt.DisconnectSignal(ptr.Pointer(), "hideIcon")
+	}
+}
+
+func (ptr *SystemTrayIcon) HideIcon() {
+	if ptr.Pointer() != nil {
+		C.SystemTrayIcond8a073_HideIcon(ptr.Pointer())
 	}
 }
 

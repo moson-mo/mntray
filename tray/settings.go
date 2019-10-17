@@ -6,17 +6,28 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 )
 
+// defaults
 const (
-	dir           = "/mntray"
-	fileSettings  = "/settings.json"
-	fileArticles  = "/articles.json"
-	url           = "ws://manjaro.moson.eu:6666/articles"
-	maxItems      = 10
-	retryInterval = 10
-	numberRetries = 5
-	hideWhenRead  = false
+	dir               = "/mntray"
+	fileSettings      = "/settings.json"
+	fileArticles      = "/articles.json"
+	url               = "http://manjaro.moson.eu:10111/news"
+	maxItems          = 10
+	refreshInterval   = 600
+	hideWhenRead      = false
+	autostart         = true
+	errorNotification = true
+	desktopFile       = `[Desktop Entry]
+Terminal=false
+Name=mntray
+Type=Application
+Exec=/usr/bin/mntray
+Icon=mntray
+Comment=A Manjaro Linux announcements notification app
+`
 )
 
 // default categories
@@ -24,50 +35,65 @@ var categories = []string{"Testing Updates", "Stable Updates", "Unstable Updates
 
 // Settings to be saved to file
 type settings struct {
-	URL               string
-	MaxArticles       int
-	Categories        []string
-	configDir         string
-	configFile        string
-	ArticlesFile      string
-	ReconnectInterval int
-	NumberOfRetries   int
-	HideNoNews        bool
+	ServerURL          string
+	MaxArticles        int
+	Categories         []string
+	configDir          string
+	configBaseDir      string
+	configFile         string
+	ArticlesFile       string
+	RefreshInterval    int
+	HideNoNews         bool
+	Autostart          bool
+	ErrorNotifications bool
 }
 
 // NewSettings creates settings with default config if not yet existing
 // Otherwise, load settings from file
 func NewSettings() (*settings, error) {
 	s := settings{
-		URL:               url,
-		MaxArticles:       maxItems,
-		Categories:        categories,
-		ReconnectInterval: retryInterval,
-		NumberOfRetries:   numberRetries,
-		HideNoNews:        hideWhenRead,
+		ServerURL:          url,
+		MaxArticles:        maxItems,
+		Categories:         categories,
+		RefreshInterval:    refreshInterval,
+		HideNoNews:         hideWhenRead,
+		Autostart:          autostart,
+		ErrorNotifications: errorNotification,
 	}
 	d, err := createConfigDir()
 	if err != nil {
 		return nil, err
 	}
 	s.configDir = d
+	s.configBaseDir = strings.Replace(d, "/mntray", "", 1)
 	s.configFile = d + fileSettings
 	s.ArticlesFile = d + fileArticles
 
 	err = s.LoadSettings()
 	if err != nil {
 		fmt.Println("No config found. Trying to create default config file")
-		err = s.SaveSettings()
+		err = s.SaveSettings(false)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	err = s.createDesktopFile()
+	if err != nil {
+		print(err)
 	}
 
 	return &s, nil
 }
 
 // Save saves settings to file
-func (s *settings) SaveSettings() error {
+func (s *settings) SaveSettings(loadBeforeSave bool) error {
+	if loadBeforeSave {
+		err := s.LoadSettings()
+		if err != nil {
+			print("Settings could not be loaded: " + err.Error())
+		}
+	}
 	b, err := json.MarshalIndent(s, "", "\t")
 	if err != nil {
 		return err
@@ -76,6 +102,54 @@ func (s *settings) SaveSettings() error {
 	if err != nil {
 		return err
 	}
+
+	err = s.createDesktopFile()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *settings) createDesktopFile() error {
+	asdir := s.configBaseDir + "/autostart"
+	fileName := asdir + "/mntray.desktop"
+
+	// make sure we have an autostart dir (might be useless?)
+	_, err := os.Stat(asdir)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		err = os.Mkdir(asdir, 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	// create file (if not yet existing)
+	if s.Autostart {
+		_, err := os.Stat(fileName)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return err
+			}
+
+			err = ioutil.WriteFile(fileName, []byte(desktopFile), 0755)
+			if err != nil {
+				return err
+			}
+		}
+	} else { // remove file if existing
+		_, err := os.Stat(fileName)
+		if err == nil {
+			print("remove desktop file")
+			err = os.Remove(fileName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

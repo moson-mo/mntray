@@ -1,11 +1,11 @@
 package tray
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/therecipe/qt/core"
 
@@ -17,7 +17,8 @@ type SystemTrayIcon struct {
 	ui.QSystemTrayIcon
 
 	_ func(a article, b bool) `slot:"triggerSlot"`
-	_ func()                  `slot:"connectionDead"`
+	_ func(err error)         `slot:"connectionDead"`
+	_ func()                  `slot:"hideIcon"`
 }
 
 type menuItem struct {
@@ -32,16 +33,15 @@ type trayIcon struct {
 	config       *settings
 	items        []menuItem
 	cacheDir     string
-	done         chan bool
+	quit         chan bool
 	mut          *sync.Mutex
 	ico          *gui.QIcon
 	icoNew       *gui.QIcon
 	icoChecked   *gui.QIcon
 	icoUnchecked *gui.QIcon
 	icoExit      *gui.QIcon
-	sigc         chan os.Signal
 	lastMenuItem *menuItem
-	quit         *sync.WaitGroup
+	wg           *sync.WaitGroup
 }
 
 func Run() error {
@@ -60,7 +60,7 @@ func Run() error {
 	// load articles from saved file
 	arts, err := config.LoadArticles()
 	if err != nil {
-		fmt.Println("Error loading articles from file")
+		print("Error loading articles from file")
 	}
 
 	// create menu items for loaded articles
@@ -73,6 +73,9 @@ func Run() error {
 
 	// start main loop
 	ui.QApplication_Exec()
+
+	// wait for go-routine to finish
+	ti.wg.Wait()
 	return nil
 }
 
@@ -81,14 +84,15 @@ func newIcon(app *ui.QApplication, conf *settings) *trayIcon {
 	ti := trayIcon{
 		app:          app,
 		icon:         NewSystemTrayIcon(app),
-		done:         make(chan bool),
+		quit:         make(chan bool, 1),
 		config:       conf,
 		mut:          &sync.Mutex{},
-		ico:          gui.NewQIcon5(":assets/images/m64.png"),
-		icoNew:       gui.NewQIcon5(":assets/images/m64n.png"),
+		ico:          gui.QIcon_FromTheme2("mntray-regular", gui.NewQIcon5(":assets/images/mntray-regular.png")),
+		icoNew:       gui.QIcon_FromTheme2("mntray-news", gui.NewQIcon5(":assets/images/mntray-news.png")),
 		icoChecked:   gui.QIcon_FromTheme2("emblem-checked", gui.QIcon_FromTheme2("emblem-default", gui.QIcon_FromTheme("dialog-yes"))),
 		icoExit:      gui.QIcon_FromTheme("application-exit"),
 		icoUnchecked: gui.QIcon_FromTheme2("vcs-removed", gui.QIcon_FromTheme("emblem-draft")),
+		wg:           &sync.WaitGroup{},
 	}
 
 	ti.icon.SetIcon(ti.ico)
@@ -116,10 +120,27 @@ func newIcon(app *ui.QApplication, conf *settings) *trayIcon {
 		}
 	})
 
-	ti.icon.ConnectConnectionDead(func() {
-		ti.tiredConnecting()
+	// message when articles can not be downloaded (run on main thread)
+	ti.icon.ConnectConnectionDead(func(err error) {
+		ti.lastMenuItem = nil
+		if ti.config.HideNoNews {
+			ti.icon.Show()
+		}
+		ti.icon.ShowMessage2("Manjaro News - Error", "Error fetching news:\n"+err.Error(), gui.QIcon_FromTheme("error"), 5000)
+		if ti.config.HideNoNews {
+			go func() {
+				<-time.After(5 * time.Second)
+				ti.icon.HideIcon()
+			}()
+		}
 	})
 
+	// hide icon (run on main thread)
+	ti.icon.ConnectHideIcon(func() {
+		ti.icon.Hide()
+	})
+
+	// Open article when a message has been clicked (run on main thread)
 	ti.icon.ConnectMessageClicked(func() {
 		if ti.lastMenuItem != nil {
 			ti.openArticle(ti.lastMenuItem.news)
@@ -156,15 +177,16 @@ func (ti *trayIcon) save() {
 		articles[i] = ti.items[i].news
 	}
 	ti.config.SaveArticles(articles)
-	err := ti.config.SaveSettings()
+	err := ti.config.SaveSettings(true)
 	if err != nil {
-		fmt.Println("Could not save settings: " + err.Error())
+		print("Could not save settings: " + err.Error())
 	}
 }
 
 // saves articles to disk and quits the application
 func (ti *trayIcon) saveAndQuit() {
 	ti.save()
+	ti.quit <- true
 	ti.app.Quit()
 }
 
@@ -198,7 +220,7 @@ func (ti *trayIcon) addMenuItem(a article) *ui.QAction {
 // opens the article in the default browser
 func (ti *trayIcon) openArticle(a article) {
 	ti.markRead(a)
-	fmt.Println("Opened item: " + a.Title)
+	print("Opened item: " + a.Title)
 
 	com := exec.Command("xdg-open", a.URL)
 	com.Start()
@@ -279,23 +301,4 @@ func (ti *trayIcon) setTrayIcon() {
 		ti.icon.Hide()
 	}
 	ti.icon.SetIcon(ti.ico)
-}
-
-// connection could not be made, add item to let user reconnect
-func (ti *trayIcon) tiredConnecting() {
-	if ti.config.HideNoNews {
-		ti.icon.Show()
-	}
-	ti.icon.ShowMessage2("Manjaro News - Connection lost", "Connection lost, try to reconnect manually.", gui.NewQIcon5(":assets/images/manjaro64.png"), 5000)
-	a := ui.NewQAction2("Reconnect... (connection lost)", ti.newsMenu)
-	a.SetIcon(gui.QIcon_FromTheme("view-refresh"))
-	ti.newsMenu.InsertAction(ti.newsMenu.Actions()[len(ti.newsMenu.Actions())-1], a)
-	a.ConnectTriggered(func(checked bool) {
-		// try reconnecting and remove menu entry
-		ti.waitForNews()
-		a.DestroyQAction()
-		if ti.config.HideNoNews {
-			ti.icon.Hide()
-		}
-	})
 }

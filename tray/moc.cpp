@@ -57,7 +57,8 @@ public:
 signals:
 public slots:
 	void triggerSlot(quintptr a, bool b) { callbackSystemTrayIcond8a073_TriggerSlot(this, a, b); };
-	void connectionDead() { callbackSystemTrayIcond8a073_ConnectionDead(this); };
+	void connectionDead(QString err) { QByteArray teb35c3 = err.toUtf8(); Moc_PackedString errPacked = { const_cast<char*>(teb35c3.prepend("WHITESPACE").constData()+10), teb35c3.size()-10 };callbackSystemTrayIcond8a073_ConnectionDead(this, errPacked); };
+	void hideIcon() { callbackSystemTrayIcond8a073_HideIcon(this); };
 private:
 };
 
@@ -72,9 +73,14 @@ void SystemTrayIcond8a073_TriggerSlot(void* ptr, uintptr_t a, char b)
 	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "triggerSlot", Q_ARG(quintptr, a), Q_ARG(bool, b != 0));
 }
 
-void SystemTrayIcond8a073_ConnectionDead(void* ptr)
+void SystemTrayIcond8a073_ConnectionDead(void* ptr, struct Moc_PackedString err)
 {
-	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "connectionDead");
+	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "connectionDead", Q_ARG(QString, QString::fromUtf8(err.data, err.len)));
+}
+
+void SystemTrayIcond8a073_HideIcon(void* ptr)
+{
+	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "hideIcon");
 }
 
 int SystemTrayIcond8a073_SystemTrayIcond8a073_QRegisterMetaType()

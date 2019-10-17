@@ -1,2 +1,2 @@
-qtdeploy -docker build linux
+qtdeploy build linux
 upx deploy/linux/mntray
