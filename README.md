@@ -1,4 +1,4 @@
-<img src="https://github.com/moson-mo/mntray/raw/master/assets/mntray.png?inline=true"  align="left" width="120" />
+<img src="https://raw.githubusercontent.com/moson-mo/mntray/master/assets/images/mntray.png?inline=true"  align="left" width="120" />
 
 # mntray
 ## A Manjaro Linux announcements notification app
