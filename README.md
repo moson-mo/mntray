@@ -111,6 +111,9 @@ ErrorNotifications| Show a notification in case articles can not be retrieved (f
 
 ## Todo / Plans
 
-* Code cleanup (things are gettings messy)
-* Unit test
+* Code cleanup (things are getting messy)
+* Unit tests
 * Integrate twitter news
+* GUI settings editor
+* Set initial category according to user's branch
+* Update the screenshots 😜
