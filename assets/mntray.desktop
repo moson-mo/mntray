@@ -1,0 +1,7 @@
+[Desktop Entry]
+Terminal=false
+Name=mntray
+Type=Application
+Exec=/usr/bin/mntray
+Icon=mntray
+Comment=A Manjaro Linux announcements notification app
