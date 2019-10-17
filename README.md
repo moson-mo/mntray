@@ -1,4 +1,4 @@
-<img src="https://github.com/moson-mo/mntray/raw/master/screenshots/logo.png?inline=true"  align="left" width="120" />
+<img src="https://github.com/moson-mo/mntray/raw/master/assets/mntray.png?inline=true"  align="left" width="120" />
 
 # mntray
 ## A Manjaro Linux announcements notification app
@@ -97,6 +97,7 @@ ErrorNotifications| Show a notification in case articles can not be retrieved (f
 ![xfce notification](https://github.com/moson-mo/mntray/raw/master/screenshots/xfce_notification.png?inline=true)
 ![kde notification](https://github.com/moson-mo/mntray/raw/master/screenshots/kde_notification.png?inline=true)
 ![gnome notification](https://github.com/moson-mo/mntray/raw/master/screenshots/gnome_notification.png?inline=true)
+</br>
 
 ## Thanks to
 
@@ -106,3 +107,10 @@ ErrorNotifications| Show a notification in case articles can not be retrieved (f
 * [SGS](https://github.com/sgse) for providing the app logo
 * [therecipe](https://github.com/therecipe) for the Qt binding library
 * The ones I forgot to mention here :)
+</br>
+
+## Todo / Plans
+
+* Code cleanup (things are gettings messy)
+* Unit test
+* Integrate twitter news
