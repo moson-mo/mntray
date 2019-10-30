@@ -63,7 +63,8 @@ When you want to chang settings, make sure the app is not running since it will 
 	"RefreshInterval": 600,
 	"HideNoNews": false,
 	"Autostart": true,
-	"ErrorNotifications": true
+	"ErrorNotifications": true,
+	"DelayAfterStart": 120
 }
 ```
 
@@ -77,6 +78,7 @@ RefreshInterval| The interval (in seconds) in which mntray will check for new ar
 Autostart| Places a .desktop file in the users autostart folder when "true"|
 HideNoNews| When set to "true", the tray icon is hidden when all news have been read|
 ErrorNotifications| Show a notification in case articles can not be retrieved (f.e. network down)|
+DelayAfterStart| Delays checking for news articles after startup (in seconds), f.e. wait for network to be up|
 </br>
 
 ## Dependencies
