@@ -160,6 +160,12 @@ func (ti *trayIcon) createNewsMenu() {
 		}
 	})
 	menu.AddSeparator()
+	mr := menu.AddAction("Mark all as read")
+	mr.ConnectTriggered(func(bool) {
+		ti.markAllRead()
+		ti.save()
+	})
+
 	quit := menu.AddAction("Quit")
 	quit.SetIcon(ti.icoExit)
 	quit.ConnectTriggered(func(bool) {
@@ -209,9 +215,6 @@ func (ti *trayIcon) addMenuItem(a article) *ui.QAction {
 	}
 
 	item.ConnectTriggered(func(checked bool) {
-		if !checked {
-			item.SetIcon(ti.icoChecked)
-		}
 		ti.openArticle(a)
 	})
 	return item
@@ -260,12 +263,22 @@ func (ti *trayIcon) getInsertPosition(a article) *ui.QAction {
 	return pos
 }
 
-// marks an article as read and update the trayicon
+// marks an article as read and updates the trayicon
 func (ti *trayIcon) markRead(a article) {
 	for i := range ti.items {
 		if ti.items[i].news.GUID == a.GUID {
 			ti.items[i].news.WasRead = true
+			ti.items[i].item.SetIcon(ti.icoChecked)
 		}
+	}
+	ti.setTrayIcon()
+}
+
+// marks all articles as read and updates the trayicon
+func (ti *trayIcon) markAllRead() {
+	for i := range ti.items {
+		ti.items[i].news.WasRead = true
+		ti.items[i].item.SetIcon(ti.icoChecked)
 	}
 	ti.setTrayIcon()
 }

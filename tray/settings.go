@@ -20,6 +20,7 @@ const (
 	hideWhenRead      = false
 	autostart         = true
 	errorNotification = true
+	fetchDelay        = 120
 	desktopFile       = `[Desktop Entry]
 Terminal=false
 Name=mntray
@@ -46,6 +47,7 @@ type settings struct {
 	HideNoNews         bool
 	Autostart          bool
 	ErrorNotifications bool
+	DelayAfterStart    int
 }
 
 // NewSettings creates settings with default config if not yet existing
@@ -59,6 +61,7 @@ func NewSettings() (*settings, error) {
 		HideNoNews:         hideWhenRead,
 		Autostart:          autostart,
 		ErrorNotifications: errorNotification,
+		DelayAfterStart:    fetchDelay,
 	}
 	d, err := createConfigDir()
 	if err != nil {

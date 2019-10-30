@@ -3,6 +3,7 @@ package tray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -29,7 +30,13 @@ func (ti *trayIcon) waitForNews() {
 			return
 		}
 
-		ti.addNewsFromServer(b)
+		select {
+		case <-time.After(time.Duration(ti.config.DelayAfterStart) * time.Second):
+			fmt.Println("fetched news...")
+			ti.addNewsFromServer(b)
+		case <-ti.quit:
+			return
+		}
 
 		// wait for news to arrive from server
 		for {

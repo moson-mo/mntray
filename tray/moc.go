@@ -380,6 +380,7 @@ func (ptr *SystemTrayIcon) __qFindChildren_newList2() unsafe.Pointer {
 }
 
 func NewSystemTrayIcon(parent std_core.QObject_ITF) *SystemTrayIcon {
+	SystemTrayIcon_QRegisterMetaType()
 	tmpValue := NewSystemTrayIconFromPointer(C.SystemTrayIcond8a073_NewSystemTrayIcon(std_core.PointerFromQObject(parent)))
 	if !qt.ExistsSignal(tmpValue.Pointer(), "destroyed") {
 		tmpValue.ConnectDestroyed(func(*std_core.QObject) { tmpValue.SetPointer(nil) })
@@ -388,6 +389,7 @@ func NewSystemTrayIcon(parent std_core.QObject_ITF) *SystemTrayIcon {
 }
 
 func NewSystemTrayIcon2(icon std_gui.QIcon_ITF, parent std_core.QObject_ITF) *SystemTrayIcon {
+	SystemTrayIcon_QRegisterMetaType()
 	tmpValue := NewSystemTrayIconFromPointer(C.SystemTrayIcond8a073_NewSystemTrayIcon2(std_gui.PointerFromQIcon(icon), std_core.PointerFromQObject(parent)))
 	if !qt.ExistsSignal(tmpValue.Pointer(), "destroyed") {
 		tmpValue.ConnectDestroyed(func(*std_core.QObject) { tmpValue.SetPointer(nil) })
