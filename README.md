@@ -124,6 +124,6 @@ SetCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and filte
 ## Known issues
 
 * "HideNoNews" not working correctly\
-</br>
+\
 There seems to be a problem with the Hide() method of QSystemTrayIcon (Qt).\
 Due to that this function does not work reliably on GNOME and KDE environments atm.
