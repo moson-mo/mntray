@@ -50,6 +50,7 @@ When you want to chang settings, make sure the app is not running since it will 
 
 ```
 {
+	"Version": "0.2.0"
 	"ServerURL": "http://manjaro.moson.eu:10111/news",
 	"MaxArticles": 10,
 	"Categories": [
@@ -64,21 +65,22 @@ When you want to chang settings, make sure the app is not running since it will 
 	"Autostart": true,
 	"ErrorNotifications": true,
 	"DelayAfterStart": 60,
-	"DetectCategoriesFromBranch": true
+	"SetCategoriesFromBranch": true
 }
 ```
 
 Option | Description
 --- | ---
+Version| Version number. Do not change!|
 URL| WebSocket URL of the mnservice server|
 MaxArticles| The maximum number of articles to retrieve / show in the menu|
-Categories| The categories you want to get announcements for</br>Remove unwanted categories if needed|
+Categories| The categories you want to get announcements for</br>Remove unwanted categories if needed</br></br>**note:* Is ignored when SetCategoriesFromBranch is "true"|
 RefreshInterval| The interval (in seconds) in which mntray will check for new articles|
 Autostart| Places a .desktop file in the users autostart folder when "true"|
-HideNoNews| When set to "true", the tray icon is hidden when all news have been read|
+HideNoNews| When set to "true", the tray icon is hidden when all news have been read</br></br>**note:* Does not work reliably on GNOME & KDE. See "Known issues"|
 ErrorNotifications| Show a notification in case articles can not be retrieved (f.e. network down)|
-DelayAfterStart| Delays checking for news articles after startup (in seconds), f.e. wait for network to be up. Note that this setting only takes effect when mntray is started with parameter "--delay"|
-DetectCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and filters categories accordingly (f.e. "Stable Updates" & "Announcements")|
+DelayAfterStart| Delays checking for news articles after startup (in seconds), f.e. wait for network to be up.</br></br> **note:* This setting only takes effect when mntray is started with parameter "--delay"|
+SetCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and filters categories accordingly (f.e. "Stable Updates" & "Announcements")</br></br>|
 
 </br>
 
@@ -117,3 +119,11 @@ DetectCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and fi
 * Unit tests
 * Integrate twitter news
 * GUI settings editor
+</br>
+
+## Known issues
+
+* "HideNoNews" not working correctly\
+</br>
+There seems to be a problem with the Hide() method of QSystemTrayIcon (Qt).\
+Due to that this function does not work reliably on GNOME and KDE environments atm.

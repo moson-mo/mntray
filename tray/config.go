@@ -12,6 +12,7 @@ import (
 
 // defaults
 const (
+	version           = "0.2.0"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
@@ -38,35 +39,36 @@ var categories = []string{"Testing Updates", "Stable Updates", "Unstable Updates
 
 // Config to be saved to file
 type Config struct {
-	ServerURL                  string
-	MaxArticles                int
-	Categories                 []string
-	configDir                  string
-	configBaseDir              string
-	configFile                 string
-	articlesFile               string
-	RefreshInterval            int
-	HideNoNews                 bool
-	Autostart                  bool
-	ErrorNotifications         bool
-	DelayAfterStart            int
-	DetectCategoriesFromBranch bool
-	userBranch                 string
+	ServerURL               string
+	MaxArticles             int
+	Categories              []string
+	configDir               string
+	configBaseDir           string
+	configFile              string
+	articlesFile            string
+	RefreshInterval         int
+	HideNoNews              bool
+	Autostart               bool
+	ErrorNotifications      bool
+	DelayAfterStart         int
+	SetCategoriesFromBranch bool
+	Version                 string
+	userBranch              string
 }
 
 // NewConfig creates Config with default config if not yet existing
 // Otherwise, load Config from file
 func NewConfig() (*Config, error) {
 	s := Config{
-		ServerURL:                  url,
-		MaxArticles:                maxItems,
-		Categories:                 categories,
-		RefreshInterval:            refreshInterval,
-		HideNoNews:                 hideWhenRead,
-		Autostart:                  autostart,
-		ErrorNotifications:         errorNotification,
-		DelayAfterStart:            fetchDelay,
-		DetectCategoriesFromBranch: branchDetect,
+		ServerURL:               url,
+		MaxArticles:             maxItems,
+		Categories:              categories,
+		RefreshInterval:         refreshInterval,
+		HideNoNews:              hideWhenRead,
+		Autostart:               autostart,
+		ErrorNotifications:      errorNotification,
+		DelayAfterStart:         fetchDelay,
+		SetCategoriesFromBranch: branchDetect,
 	}
 	d, err := createConfigDir()
 	if err != nil {
@@ -86,8 +88,15 @@ func NewConfig() (*Config, error) {
 			return nil, err
 		}
 	}
+	replaceDesktopFile := false
 
-	err = s.createDesktopFile()
+	if s.Version == "" {
+		replaceDesktopFile = true
+	}
+
+	s.Version = version
+
+	err = s.createDesktopFile(replaceDesktopFile)
 	if err != nil {
 		print(err)
 	}
@@ -112,14 +121,14 @@ func (s *Config) SaveConfig(loadBeforeSave bool) error {
 		return err
 	}
 
-	err = s.createDesktopFile()
+	err = s.createDesktopFile(false)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Config) createDesktopFile() error {
+func (s *Config) createDesktopFile(replace bool) error {
 	asdir := s.configBaseDir + "/autostart"
 	fileName := asdir + "/mntray.desktop"
 
@@ -137,6 +146,10 @@ func (s *Config) createDesktopFile() error {
 
 	// create file (if not yet existing)
 	if s.Autostart {
+		// delete previous desktop file (needed for migration to v0.2.0)
+		if replace {
+			os.Remove(fileName) // we don't care about errors
+		}
 		_, err := os.Stat(fileName)
 		if err != nil {
 			if !os.IsNotExist(err) {
@@ -151,7 +164,7 @@ func (s *Config) createDesktopFile() error {
 	} else { // remove file if existing
 		_, err := os.Stat(fileName)
 		if err == nil {
-			print("remove desktop file")
+			fmt.Println("removing desktop file")
 			err = os.Remove(fileName)
 			if err != nil {
 				return err
@@ -231,7 +244,7 @@ func createConfigDir() (string, error) {
 	return d, nil
 }
 
-// get branch from pacman mirrors config file
+// get branch from pacman-mirrors config file
 func getBranch() string {
 	f, err := os.Open("/etc/pacman-mirrors.conf")
 	if err != nil {
