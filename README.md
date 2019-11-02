@@ -63,7 +63,8 @@ When you want to chang settings, make sure the app is not running since it will 
 	"HideNoNews": false,
 	"Autostart": true,
 	"ErrorNotifications": true,
-	"DelayAfterStart": 60
+	"DelayAfterStart": 60,
+	"DetectCategoriesFromBranch": true
 }
 ```
 
