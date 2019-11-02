@@ -59,12 +59,11 @@ When you want to chang settings, make sure the app is not running since it will 
 		"Announcements",
 		"manjaro32"
 	],
-	"ArticlesFile": "/home/moson/.config/mntray/articles.json",
 	"RefreshInterval": 600,
 	"HideNoNews": false,
 	"Autostart": true,
 	"ErrorNotifications": true,
-	"DelayAfterStart": 120
+	"DelayAfterStart": 60
 }
 ```
 
@@ -73,12 +72,13 @@ Option | Description
 URL| WebSocket URL of the mnservice server|
 MaxArticles| The maximum number of articles to retrieve / show in the menu|
 Categories| The categories you want to get announcements for</br>Remove unwanted categories if needed|
-ArticlesFile| Path to the local file with news articles|
 RefreshInterval| The interval (in seconds) in which mntray will check for new articles|
 Autostart| Places a .desktop file in the users autostart folder when "true"|
 HideNoNews| When set to "true", the tray icon is hidden when all news have been read|
 ErrorNotifications| Show a notification in case articles can not be retrieved (f.e. network down)|
-DelayAfterStart| Delays checking for news articles after startup (in seconds), f.e. wait for network to be up|
+DelayAfterStart| Delays checking for news articles after startup (in seconds), f.e. wait for network to be up. Note that this setting only takes effect when mntray is started with parameter "--delay"|
+DetectCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and filters categories accordingly (f.e. "Stable Updates" & "Announcements")|
+
 </br>
 
 ## Dependencies
@@ -113,9 +113,6 @@ DelayAfterStart| Delays checking for news articles after startup (in seconds), f
 
 ## Todo / Plans
 
-* Code cleanup (things are getting messy)
 * Unit tests
 * Integrate twitter news
 * GUI settings editor
-* Set initial category according to user's branch
-* Update the screenshots 😜

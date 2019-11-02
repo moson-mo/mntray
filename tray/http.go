@@ -9,67 +9,68 @@ import (
 	"time"
 )
 
-type clientSettings struct {
+// ClientSettings holds information about the max items and the categories to be fetched.
+type ClientSettings struct {
 	MaxItems   int      `json:"MaxItems"`
 	Categories []string `json:"Categories"`
 }
 
 // connect to server and wait for responses
-func (ti *trayIcon) waitForNews() {
+func (t *TrayIcon) waitForNews() {
 	go func() {
-		ti.wg.Add(1)
-		defer ti.wg.Done()
 		// prepare client settings
-		cs := &clientSettings{
-			MaxItems:   ti.config.MaxArticles,
-			Categories: ti.config.Categories,
-		}
-		b, err := json.Marshal(cs)
-		if err != nil {
-			print(err)
-			return
+		cs := &ClientSettings{
+			MaxItems:   t.Conf.MaxArticles,
+			Categories: t.Conf.Categories,
 		}
 
-		select {
-		case <-time.After(time.Duration(ti.config.DelayAfterStart) * time.Second):
-			fmt.Println("fetched news...")
-			ti.addNewsFromServer(b)
-		case <-ti.quit:
-			return
-		}
-
-		// wait for news to arrive from server
-		for {
-			select {
-			case <-time.After(time.Duration(ti.config.RefreshInterval) * time.Second):
-				ti.addNewsFromServer(b)
-			case <-ti.quit:
-				return
+		// set categories according to branch if configured
+		if t.Conf.DetectCategoriesFromBranch {
+			if t.Conf.userBranch == "" {
+				fmt.Println("Could not detect branch, going for stable updates only")
+				cs.Categories = []string{"Stable Updates", "Announcements"}
+			} else {
+				cs.Categories = []string{t.Conf.userBranch + " Updates", "Announcements"}
 			}
+		}
+
+		b, _ := json.Marshal(cs)
+
+		// wait for configured number of seconds if started in delay mode
+		if t.Delay {
+			<-time.After(time.Duration(t.Conf.DelayAfterStart) * time.Second)
+		}
+		t.addNewsFromServer(b)
+
+		// fetch news loop (interval from config)
+		for {
+			<-time.After(time.Duration(t.Conf.RefreshInterval) * time.Second)
+			t.addNewsFromServer(b)
 		}
 	}()
 }
 
-func (ti *trayIcon) addNewsFromServer(payload []byte) {
+// adds news to menu
+func (t *TrayIcon) addNewsFromServer(payload []byte) {
 	// get articles from server
-	articles, err := ti.getArticlesFromServer(payload)
+	articles, err := t.getArticlesFromServer(payload)
 	if err != nil {
-		print(err)
-		if ti.config.ErrorNotifications {
-			ti.icon.ConnectionDead(err)
+		fmt.Println("Error fetching news:", err)
+		if t.Conf.ErrorNotifications {
+			t.Icon.ErrorSlot(err)
 		}
 		return
 	}
 	// add news
 	for _, a := range articles {
-		ti.receivedNews(a, false)
+		t.gotNewArticle(a, false)
 	}
 }
 
-// get articles from server
-func (ti *trayIcon) getArticlesFromServer(body []byte) ([]article, error) {
+// fetches articles from server
+func (t *TrayIcon) getArticlesFromServer(body []byte) ([]Article, error) {
 	// request news articles
-	r, err := http.Post(ti.config.ServerURL, "application/json", bytes.NewReader(body))
+	r, err := http.Post(t.Conf.ServerURL, "application/json", bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +83,7 @@ func (ti *trayIcon) getArticlesFromServer(body []byte) ([]article, error) {
 	}
 
 	// get articles from json
-	articles := []article{}
+	articles := []Article{}
 	err = json.Unmarshal(b, &articles)
 	if err != nil {
 		return nil, err

@@ -1,3 +1,6 @@
 deploy
 linux
 .vscode
+moc*
+rcc.cpp
+rcc_cgo_linux_linux_amd64.go

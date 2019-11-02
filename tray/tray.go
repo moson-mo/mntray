@@ -1,258 +1,212 @@
 package tray
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"sort"
-	"sync"
+	"syscall"
 	"time"
 
 	"github.com/therecipe/qt/core"
-
 	"github.com/therecipe/qt/gui"
 	ui "github.com/therecipe/qt/widgets"
 )
 
+// SystemTrayIcon is a customized QSystemTrayIcon
 type SystemTrayIcon struct {
 	ui.QSystemTrayIcon
 
-	_ func(a article, b bool) `slot:"triggerSlot"`
-	_ func(err error)         `slot:"connectionDead"`
-	_ func()                  `slot:"hideIcon"`
+	_ func(Article, bool) `slot:"newArticleSlot"`
+	_ func(error)         `slot:"errorSlot"`
+	_ func()              `slot:"hideIconSlot"`
 }
 
-type menuItem struct {
-	item *ui.QAction
-	news article
+var (
+	ico, icoNew, icoChecked, icoExit, icoUnchecked *gui.QIcon
+)
+
+// TrayIcon is our main struct. It holds a list of articles, the tray icon and menu
+type TrayIcon struct {
+	App         *ui.QApplication
+	Icon        *SystemTrayIcon
+	Menu        *ui.QMenu
+	Conf        *Config
+	Articles    []Article
+	LastArticle *Article
+	Delay       bool
 }
 
-type trayIcon struct {
-	app          *ui.QApplication
-	icon         *SystemTrayIcon
-	newsMenu     *ui.QMenu
-	config       *settings
-	items        []menuItem
-	cacheDir     string
-	quit         chan bool
-	mut          *sync.Mutex
-	ico          *gui.QIcon
-	icoNew       *gui.QIcon
-	icoChecked   *gui.QIcon
-	icoUnchecked *gui.QIcon
-	icoExit      *gui.QIcon
-	lastMenuItem *menuItem
-	wg           *sync.WaitGroup
-}
+// NewTrayIcon creates a new tray icon
+func NewTrayIcon(delay bool) error {
+	var err error
+	t := &TrayIcon{
+		App:      ui.NewQApplication(len(os.Args), os.Args),
+		Delay:    delay,
+		Articles: []Article{},
+	}
 
-func Run() error {
-	app := ui.NewQApplication(len(os.Args), os.Args)
+	// set icons
+	ico = gui.QIcon_FromTheme2("mntray-regular", gui.NewQIcon5(":assets/images/mntray-regular.png"))
+	icoNew = gui.QIcon_FromTheme2("mntray-news", gui.NewQIcon5(":assets/images/mntray-news.png"))
+	icoChecked = gui.QIcon_FromTheme2("emblem-checked", gui.QIcon_FromTheme2("emblem-default", gui.QIcon_FromTheme("dialog-yes")))
+	icoExit = gui.QIcon_FromTheme("application-exit")
+	icoUnchecked = gui.QIcon_FromTheme2("vcs-removed", gui.QIcon_FromTheme("emblem-draft"))
 
-	// load config from file, if not existing create new config file with defaults
-	config, err := NewSettings()
+	// create icon
+	t.Icon = NewSystemTrayIcon(t.App)
+	t.Icon.SetIcon(ico)
+	t.Conf, err = NewConfig()
 	if err != nil {
 		return err
 	}
 
-	// initialize the tray icon
-	ti := newIcon(app, config)
-	ti.icon.Show()
-
-	// load articles from saved file
-	arts, err := config.LoadArticles()
+	// load articles from file
+	arts, err := t.Conf.LoadArticles()
 	if err != nil {
-		print("Error loading articles from file")
+		fmt.Println("Error loading articles from file:", err)
 	}
+
+	// make menu
+	t.createMenu()
+
+	// connect slots
+	t.Icon.ConnectNewArticleSlot(t.onNewArticle)
+	t.Icon.ConnectErrorSlot(t.onError)
+	t.Icon.ConnectHideIconSlot(t.onHideIcon)
+
+	// connect signals
+	t.Icon.ConnectMessageClicked(t.onMessageClicked)
 
 	// create menu items for loaded articles
-	for _, a := range arts {
-		ti.receivedNews(a, true)
+	for i := range arts {
+		t.gotNewArticle(arts[i], true)
 	}
 
-	// initialize websocket and wait for news
-	ti.waitForNews()
+	// show icon
+	t.Icon.Show()
+	t.setTrayIcon()
 
-	// start main loop
-	ui.QApplication_Exec()
+	// start loop for fetching news
+	t.waitForNews()
 
-	// wait for go-routine to finish
-	ti.wg.Wait()
+	// handle signals from OS
+	go t.handleOSSignals()
+
+	// Qt main loop
+	t.App.Exec()
 	return nil
 }
 
-// creates new tray icon and initializes variables
-func newIcon(app *ui.QApplication, conf *settings) *trayIcon {
-	ti := trayIcon{
-		app:          app,
-		icon:         NewSystemTrayIcon(app),
-		quit:         make(chan bool, 1),
-		config:       conf,
-		mut:          &sync.Mutex{},
-		ico:          gui.QIcon_FromTheme2("mntray-regular", gui.NewQIcon5(":assets/images/mntray-regular.png")),
-		icoNew:       gui.QIcon_FromTheme2("mntray-news", gui.NewQIcon5(":assets/images/mntray-news.png")),
-		icoChecked:   gui.QIcon_FromTheme2("emblem-checked", gui.QIcon_FromTheme2("emblem-default", gui.QIcon_FromTheme("dialog-yes"))),
-		icoExit:      gui.QIcon_FromTheme("application-exit"),
-		icoUnchecked: gui.QIcon_FromTheme2("vcs-removed", gui.QIcon_FromTheme("emblem-draft")),
-		wg:           &sync.WaitGroup{},
-	}
+// creates the basic menu
+func (t *TrayIcon) createMenu() {
+	m := ui.NewQMenu(nil)
+	t.Icon.ConnectActivated(t.onActivated)
 
-	ti.icon.SetIcon(ti.ico)
-	ti.createNewsMenu()
+	m.AddSeparator()
+	mr := m.AddAction("Mark all as read")
+	mr.ConnectTriggered(t.onMarkAsReadClicked)
 
-	ti.icon.ConnectTriggerSlot(func(a article, fromFile bool) {
-		// add menu item
-		i := ti.addMenuItem(a)
-		mi := menuItem{
-			item: i,
-			news: a,
-		}
-		ti.items = append(ti.items, mi)
+	quit := m.AddAction("Quit")
+	quit.SetIcon(icoExit)
+	quit.ConnectTriggered(t.onQuitClicked)
 
-		// set trayicon
-		ti.setTrayIcon()
-
-		// cleanup old menu items
-		ti.cleanupMenu()
-
-		// show bubble for unread articles
-		if !fromFile && !a.WasRead && ti.containsArticle(a) {
-			ti.lastMenuItem = &mi
-			ti.icon.ShowMessage2("Manjaro News - New article", a.Title, ti.icoNew, 5000)
-		}
-	})
-
-	// message when articles can not be downloaded (run on main thread)
-	ti.icon.ConnectConnectionDead(func(err error) {
-		ti.lastMenuItem = nil
-		if ti.config.HideNoNews {
-			ti.icon.Show()
-		}
-		ti.icon.ShowMessage2("Manjaro News - Error", "Error fetching news:\n"+err.Error(), gui.QIcon_FromTheme("error"), 5000)
-		if ti.config.HideNoNews {
-			go func() {
-				<-time.After(5 * time.Second)
-				ti.icon.HideIcon()
-			}()
-		}
-	})
-
-	// hide icon (run on main thread)
-	ti.icon.ConnectHideIcon(func() {
-		ti.icon.Hide()
-	})
-
-	// Open article when a message has been clicked (run on main thread)
-	ti.icon.ConnectMessageClicked(func() {
-		if ti.lastMenuItem != nil {
-			ti.openArticle(ti.lastMenuItem.news)
-			ti.lastMenuItem.item.SetIcon(ti.icoChecked)
-		}
-	})
-
-	return &ti
+	t.Menu = m
+	t.Icon.SetContextMenu(m)
 }
 
-// creates the news menu
-func (ti *trayIcon) createNewsMenu() {
-	menu := ui.NewQMenu2("news-menu", nil)
-	ti.icon.ConnectActivated(func(reason ui.QSystemTrayIcon__ActivationReason) {
-		if reason == ui.QSystemTrayIcon__Trigger {
-			ti.newsMenu.Exec2(gui.QCursor_Pos(), nil)
-		}
-	})
-	menu.AddSeparator()
-	mr := menu.AddAction("Mark all as read")
-	mr.ConnectTriggered(func(bool) {
-		ti.markAllRead()
-		ti.save()
-	})
-
-	quit := menu.AddAction("Quit")
-	quit.SetIcon(ti.icoExit)
-	quit.ConnectTriggered(func(bool) {
-		ti.saveAndQuit()
-	})
-	quit.SetData(core.NewQVariant7(0))
-	ti.newsMenu = menu
-	ti.icon.SetContextMenu(menu)
+// shows menu on left click
+func (t *TrayIcon) onActivated(r ui.QSystemTrayIcon__ActivationReason) {
+	if r == ui.QSystemTrayIcon__Trigger {
+		t.Menu.Exec2(gui.QCursor_Pos(), nil)
+	}
 }
 
-// save articles and settings to disk
-func (ti *trayIcon) save() {
-	articles := make([]article, len(ti.items))
-	for i := range ti.items {
-		articles[i] = ti.items[i].news
-	}
-	ti.config.SaveArticles(articles)
-	err := ti.config.SaveSettings(true)
+// executes when "Mark all as read" is clicked
+func (t *TrayIcon) onMarkAsReadClicked(c bool) {
+	t.markAllRead()
+	t.save()
+	t.setTrayIcon()
+}
+
+// executes when "Quit" is clicked
+func (t *TrayIcon) onQuitClicked(c bool) {
+	t.save()
+	t.App.Quit()
+}
+
+//
+func (t *TrayIcon) onHideIcon() {
+	t.Icon.Hide()
+}
+
+// saves articles an config to disk
+func (t *TrayIcon) save() {
+	err := t.Conf.SaveArticles(t.Articles)
 	if err != nil {
-		print("Could not save settings: " + err.Error())
+		fmt.Println("Could not save articles to disk:", err)
+	}
+	err = t.Conf.SaveConfig(true)
+	if err != nil {
+		fmt.Println("Could not save settings to disk:", err)
 	}
 }
 
-// saves articles to disk and quits the application
-func (ti *trayIcon) saveAndQuit() {
-	ti.save()
-	ti.quit <- true
-	ti.app.Quit()
-}
-
-// adds an item to the news menu
-func (ti *trayIcon) addMenuItem(a article) *ui.QAction {
-	var item *ui.QAction
-
-	if len(ti.newsMenu.Actions()) == 0 {
-		item = ti.newsMenu.AddAction(a.Title)
-	} else {
-		item = ui.NewQAction2(a.Title, ti.newsMenu)
-
-		ti.newsMenu.InsertAction(ti.getInsertPosition(a), item)
+// marks all articles as read
+func (t *TrayIcon) markAllRead() {
+	for i := range t.Articles {
+		t.Articles[i].WasRead = true
+		t.Articles[i].mi.SetIcon(icoChecked)
 	}
-	item.SetData(core.NewQVariant7(a.PublishedDate.Unix()))
-
-	item.SetIcon(ti.icoUnchecked)
-	if a.WasRead {
-		item.SetIcon(ti.icoChecked)
-	}
-
-	item.ConnectTriggered(func(checked bool) {
-		ti.openArticle(a)
-	})
-	return item
 }
 
-// opens the article in the default browser
-func (ti *trayIcon) openArticle(a article) {
-	ti.markRead(a)
-	print("Opened item: " + a.Title)
-
-	com := exec.Command("xdg-open", a.URL)
-	com.Start()
-	ti.save()
-}
-
-// called when we got news from the server
-func (ti *trayIcon) receivedNews(a article, fromFile bool) {
-	if !fromFile && ti.containsArticle(a) {
-		return
-	}
-
-	// add new item to menu, we use a slot to run on the main thread.
-	ti.icon.TriggerSlot(a, fromFile)
-}
-
-// checks if we already have this article in our menu
-func (ti *trayIcon) containsArticle(a article) bool {
-	for _, i := range ti.items {
-		if i.news.GUID == a.GUID {
-			return true
+// marks an article as read
+func (t *TrayIcon) markRead(a Article) {
+	for i := range t.Articles {
+		if t.Articles[i].GUID == a.GUID {
+			t.Articles[i].WasRead = true
+			t.Articles[i].mi.SetIcon(icoChecked)
 		}
 	}
-	return false
+}
+
+// sets the icon according to the current status (read / unread items)
+func (t *TrayIcon) setTrayIcon() {
+	for i := range t.Articles {
+		if !t.Articles[i].WasRead {
+			if t.Conf.HideNoNews {
+				t.Icon.Show()
+			}
+			t.Icon.SetIcon(icoNew)
+			return
+		}
+	}
+	if t.Conf.HideNoNews {
+		t.Icon.Hide()
+	}
+	t.Icon.SetIcon(ico)
+}
+
+// remove items if exceeding maxitems
+func (t *TrayIcon) cleanupMenu() {
+	sort.Slice(t.Articles, func(i, j int) bool {
+		return t.Articles[i].PublishedDate.Unix() < t.Articles[j].PublishedDate.Unix()
+	})
+
+	x := len(t.Articles) - t.Conf.MaxArticles
+	if x > 0 {
+		rem := t.Articles[0:x]
+		for i := 0; i < len(rem); i++ {
+			rem[i].mi.DestroyQAction()
+		}
+		t.Articles = t.Articles[x:]
+	}
 }
 
 // returns the position where the menu item is to be inserted (based on the date)
-func (ti *trayIcon) getInsertPosition(a article) *ui.QAction {
-	actions := ti.newsMenu.Actions()
+func (t *TrayIcon) getInsertPosition(a Article) *ui.QAction {
+	actions := t.Menu.Actions()
 	pos := actions[0]
 	for _, i := range actions {
 		if a.PublishedDate.Unix() > i.Data().ToLongLong(nil) {
@@ -263,55 +217,97 @@ func (ti *trayIcon) getInsertPosition(a article) *ui.QAction {
 	return pos
 }
 
-// marks an article as read and updates the trayicon
-func (ti *trayIcon) markRead(a article) {
-	for i := range ti.items {
-		if ti.items[i].news.GUID == a.GUID {
-			ti.items[i].news.WasRead = true
-			ti.items[i].item.SetIcon(ti.icoChecked)
+// checks if we already have this article in our menu
+func (t *TrayIcon) containsArticle(a Article) bool {
+	for _, i := range t.Articles {
+		if i.GUID == a.GUID {
+			return true
 		}
 	}
-	ti.setTrayIcon()
+	return false
 }
 
-// marks all articles as read and updates the trayicon
-func (ti *trayIcon) markAllRead() {
-	for i := range ti.items {
-		ti.items[i].news.WasRead = true
-		ti.items[i].item.SetIcon(ti.icoChecked)
+// called when we got news from the server
+func (t *TrayIcon) gotNewArticle(a Article, fromFile bool) {
+	if !fromFile && t.containsArticle(a) {
+		return
 	}
-	ti.setTrayIcon()
+
+	// add new item to menu, we use a slot to run on the main thread.
+	t.Icon.NewArticleSlot(a, fromFile)
 }
 
-// remove items if exceeding maxitems
-func (ti *trayIcon) cleanupMenu() {
-	sort.Slice(ti.items, func(i, j int) bool {
-		return ti.items[i].news.PublishedDate.Unix() < ti.items[j].news.PublishedDate.Unix()
+// opens the article in the default browser
+func (t *TrayIcon) openArticle(a Article) {
+	com := exec.Command("xdg-open", a.URL)
+	com.Start()
+	t.markRead(a)
+	t.save()
+	t.setTrayIcon()
+}
+
+// adds an item to the news menu
+func (t *TrayIcon) addMenuItem(a Article) *ui.QAction {
+
+	item := ui.NewQAction2(a.Title, t.Menu)
+	t.Menu.InsertAction(t.getInsertPosition(a), item)
+	item.SetData(core.NewQVariant7(a.PublishedDate.Unix()))
+
+	if a.WasRead {
+		item.SetIcon(icoChecked)
+	} else {
+		item.SetIcon(icoUnchecked)
+	}
+
+	item.ConnectTriggered(func(c bool) {
+		t.openArticle(a)
 	})
 
-	x := len(ti.items) - ti.config.MaxArticles
-	if x > 0 {
-		rem := ti.items[0:x]
-		for i := 0; i < len(rem); i++ {
-			rem[i].item.DestroyQAction()
-		}
-		ti.items = ti.items[x:]
+	return item
+}
+
+// when an article has been recieved
+func (t *TrayIcon) onNewArticle(a Article, fromFile bool) {
+	a.mi = t.addMenuItem(a)
+	t.Articles = append(t.Articles, a)
+
+	t.cleanupMenu()
+	t.setTrayIcon()
+
+	// show bubble for unread articles
+	if !fromFile && !a.WasRead && t.containsArticle(a) {
+		t.LastArticle = &a
+		t.Icon.ShowMessage2("Manjaro News - New article", a.Title, icoNew, 5000)
 	}
 }
 
-// sets tray icon according to status (read / unread items)
-func (ti *trayIcon) setTrayIcon() {
-	for _, i := range ti.items {
-		if !i.news.WasRead {
-			if ti.config.HideNoNews {
-				ti.icon.Show()
-			}
-			ti.icon.SetIcon(ti.icoNew)
-			return
-		}
+// when an error has occured
+func (t *TrayIcon) onError(err error) {
+	t.LastArticle = nil
+	if t.Conf.HideNoNews {
+		t.Icon.Show()
 	}
-	if ti.config.HideNoNews {
-		ti.icon.Hide()
+	t.Icon.ShowMessage2("Manjaro News - Error", err.Error(), gui.QIcon_FromTheme("error"), 5000)
+	if t.Conf.HideNoNews {
+		go func() {
+			<-time.After(5 * time.Second)
+			t.Icon.HideIconSlot()
+		}()
 	}
-	ti.icon.SetIcon(ti.ico)
+}
+
+// when a message has been clicked
+func (t *TrayIcon) onMessageClicked() {
+	if t.LastArticle != nil {
+		t.openArticle(*t.LastArticle)
+	}
+}
+
+// handles os signals for graceful shutdown (kill, interrupt, term)
+func (t *TrayIcon) handleOSSignals() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+	s := <-c
+	fmt.Println("Got signal:", s)
+	t.onQuitClicked(true)
 }

@@ -56,9 +56,9 @@ public:
 	void timerEvent(QTimerEvent * event) { callbackSystemTrayIcond8a073_TimerEvent(this, event); };
 signals:
 public slots:
-	void triggerSlot(quintptr a, bool b) { callbackSystemTrayIcond8a073_TriggerSlot(this, a, b); };
-	void connectionDead(QString err) { QByteArray teb35c3 = err.toUtf8(); Moc_PackedString errPacked = { const_cast<char*>(teb35c3.prepend("WHITESPACE").constData()+10), teb35c3.size()-10 };callbackSystemTrayIcond8a073_ConnectionDead(this, errPacked); };
-	void hideIcon() { callbackSystemTrayIcond8a073_HideIcon(this); };
+	void newArticleSlot(quintptr v0, bool v1) { callbackSystemTrayIcond8a073_NewArticleSlot(this, v0, v1); };
+	void errorSlot(QString v0) { QByteArray tea1dd7 = v0.toUtf8(); Moc_PackedString v0Packed = { const_cast<char*>(tea1dd7.prepend("WHITESPACE").constData()+10), tea1dd7.size()-10 };callbackSystemTrayIcond8a073_ErrorSlot(this, v0Packed); };
+	void hideIconSlot() { callbackSystemTrayIcond8a073_HideIconSlot(this); };
 private:
 };
 
@@ -68,19 +68,19 @@ Q_DECLARE_METATYPE(SystemTrayIcond8a073*)
 void SystemTrayIcond8a073_SystemTrayIcond8a073_QRegisterMetaTypes() {
 }
 
-void SystemTrayIcond8a073_TriggerSlot(void* ptr, uintptr_t a, char b)
+void SystemTrayIcond8a073_NewArticleSlot(void* ptr, uintptr_t v0, char v1)
 {
-	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "triggerSlot", Q_ARG(quintptr, a), Q_ARG(bool, b != 0));
+	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "newArticleSlot", Q_ARG(quintptr, v0), Q_ARG(bool, v1 != 0));
 }
 
-void SystemTrayIcond8a073_ConnectionDead(void* ptr, struct Moc_PackedString err)
+void SystemTrayIcond8a073_ErrorSlot(void* ptr, struct Moc_PackedString v0)
 {
-	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "connectionDead", Q_ARG(QString, QString::fromUtf8(err.data, err.len)));
+	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "errorSlot", Q_ARG(QString, QString::fromUtf8(v0.data, v0.len)));
 }
 
-void SystemTrayIcond8a073_HideIcon(void* ptr)
+void SystemTrayIcond8a073_HideIconSlot(void* ptr)
 {
-	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "hideIcon");
+	QMetaObject::invokeMethod(static_cast<SystemTrayIcond8a073*>(ptr), "hideIconSlot");
 }
 
 int SystemTrayIcond8a073_SystemTrayIcond8a073_QRegisterMetaType()

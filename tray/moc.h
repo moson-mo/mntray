@@ -15,9 +15,9 @@ extern "C" {
 
 struct Moc_PackedString { char* data; long long len; };
 struct Moc_PackedList { void* data; long long len; };
-void SystemTrayIcond8a073_TriggerSlot(void* ptr, uintptr_t a, char b);
-void SystemTrayIcond8a073_ConnectionDead(void* ptr, struct Moc_PackedString err);
-void SystemTrayIcond8a073_HideIcon(void* ptr);
+void SystemTrayIcond8a073_NewArticleSlot(void* ptr, uintptr_t v0, char v1);
+void SystemTrayIcond8a073_ErrorSlot(void* ptr, struct Moc_PackedString v0);
+void SystemTrayIcond8a073_HideIconSlot(void* ptr);
 int SystemTrayIcond8a073_SystemTrayIcond8a073_QRegisterMetaType();
 int SystemTrayIcond8a073_SystemTrayIcond8a073_QRegisterMetaType2(char* typeName);
 int SystemTrayIcond8a073_SystemTrayIcond8a073_QmlRegisterType();

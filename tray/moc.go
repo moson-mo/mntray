@@ -92,125 +92,125 @@ func callbackSystemTrayIcond8a073_Constructor(ptr unsafe.Pointer) {
 	qt.Register(ptr, this)
 }
 
-//export callbackSystemTrayIcond8a073_TriggerSlot
-func callbackSystemTrayIcond8a073_TriggerSlot(ptr unsafe.Pointer, a C.uintptr_t, b C.char) {
-	var aD article
-	if aI, ok := qt.ReceiveTemp(unsafe.Pointer(uintptr(a))); ok {
-		qt.UnregisterTemp(unsafe.Pointer(uintptr(a)))
-		aD = (*(*article)(aI))
+//export callbackSystemTrayIcond8a073_NewArticleSlot
+func callbackSystemTrayIcond8a073_NewArticleSlot(ptr unsafe.Pointer, v0 C.uintptr_t, v1 C.char) {
+	var v0D Article
+	if v0I, ok := qt.ReceiveTemp(unsafe.Pointer(uintptr(v0))); ok {
+		qt.UnregisterTemp(unsafe.Pointer(uintptr(v0)))
+		v0D = (*(*Article)(v0I))
 	}
-	if signal := qt.GetSignal(ptr, "triggerSlot"); signal != nil {
-		(*(*func(article, bool))(signal))(aD, int8(b) != 0)
+	if signal := qt.GetSignal(ptr, "newArticleSlot"); signal != nil {
+		(*(*func(Article, bool))(signal))(v0D, int8(v1) != 0)
 	}
 
 }
 
-func (ptr *SystemTrayIcon) ConnectTriggerSlot(f func(a article, b bool)) {
+func (ptr *SystemTrayIcon) ConnectNewArticleSlot(f func(v0 Article, v1 bool)) {
 	if ptr.Pointer() != nil {
 
-		if signal := qt.LendSignal(ptr.Pointer(), "triggerSlot"); signal != nil {
-			f := func(a article, b bool) {
-				(*(*func(article, bool))(signal))(a, b)
-				f(a, b)
+		if signal := qt.LendSignal(ptr.Pointer(), "newArticleSlot"); signal != nil {
+			f := func(v0 Article, v1 bool) {
+				(*(*func(Article, bool))(signal))(v0, v1)
+				f(v0, v1)
 			}
-			qt.ConnectSignal(ptr.Pointer(), "triggerSlot", unsafe.Pointer(&f))
+			qt.ConnectSignal(ptr.Pointer(), "newArticleSlot", unsafe.Pointer(&f))
 		} else {
-			qt.ConnectSignal(ptr.Pointer(), "triggerSlot", unsafe.Pointer(&f))
+			qt.ConnectSignal(ptr.Pointer(), "newArticleSlot", unsafe.Pointer(&f))
 		}
 	}
 }
 
-func (ptr *SystemTrayIcon) DisconnectTriggerSlot() {
+func (ptr *SystemTrayIcon) DisconnectNewArticleSlot() {
 	if ptr.Pointer() != nil {
 
-		qt.DisconnectSignal(ptr.Pointer(), "triggerSlot")
+		qt.DisconnectSignal(ptr.Pointer(), "newArticleSlot")
 	}
 }
 
-func (ptr *SystemTrayIcon) TriggerSlot(a article, b bool) {
+func (ptr *SystemTrayIcon) NewArticleSlot(v0 Article, v1 bool) {
 	if ptr.Pointer() != nil {
-		qt.RegisterTemp(unsafe.Pointer(&a), unsafe.Pointer(&a))
-		C.SystemTrayIcond8a073_TriggerSlot(ptr.Pointer(), C.uintptr_t(uintptr(unsafe.Pointer(&a))), C.char(int8(qt.GoBoolToInt(b))))
+		qt.RegisterTemp(unsafe.Pointer(&v0), unsafe.Pointer(&v0))
+		C.SystemTrayIcond8a073_NewArticleSlot(ptr.Pointer(), C.uintptr_t(uintptr(unsafe.Pointer(&v0))), C.char(int8(qt.GoBoolToInt(v1))))
 	}
 }
 
-//export callbackSystemTrayIcond8a073_ConnectionDead
-func callbackSystemTrayIcond8a073_ConnectionDead(ptr unsafe.Pointer, err C.struct_Moc_PackedString) {
-	if signal := qt.GetSignal(ptr, "connectionDead"); signal != nil {
-		(*(*func(error))(signal))(errors.New(cGoUnpackString(err)))
+//export callbackSystemTrayIcond8a073_ErrorSlot
+func callbackSystemTrayIcond8a073_ErrorSlot(ptr unsafe.Pointer, v0 C.struct_Moc_PackedString) {
+	if signal := qt.GetSignal(ptr, "errorSlot"); signal != nil {
+		(*(*func(error))(signal))(errors.New(cGoUnpackString(v0)))
 	}
 
 }
 
-func (ptr *SystemTrayIcon) ConnectConnectionDead(f func(err error)) {
+func (ptr *SystemTrayIcon) ConnectErrorSlot(f func(v0 error)) {
 	if ptr.Pointer() != nil {
 
-		if signal := qt.LendSignal(ptr.Pointer(), "connectionDead"); signal != nil {
-			f := func(err error) {
-				(*(*func(error))(signal))(err)
-				f(err)
+		if signal := qt.LendSignal(ptr.Pointer(), "errorSlot"); signal != nil {
+			f := func(v0 error) {
+				(*(*func(error))(signal))(v0)
+				f(v0)
 			}
-			qt.ConnectSignal(ptr.Pointer(), "connectionDead", unsafe.Pointer(&f))
+			qt.ConnectSignal(ptr.Pointer(), "errorSlot", unsafe.Pointer(&f))
 		} else {
-			qt.ConnectSignal(ptr.Pointer(), "connectionDead", unsafe.Pointer(&f))
+			qt.ConnectSignal(ptr.Pointer(), "errorSlot", unsafe.Pointer(&f))
 		}
 	}
 }
 
-func (ptr *SystemTrayIcon) DisconnectConnectionDead() {
+func (ptr *SystemTrayIcon) DisconnectErrorSlot() {
 	if ptr.Pointer() != nil {
 
-		qt.DisconnectSignal(ptr.Pointer(), "connectionDead")
+		qt.DisconnectSignal(ptr.Pointer(), "errorSlot")
 	}
 }
 
-func (ptr *SystemTrayIcon) ConnectionDead(err error) {
+func (ptr *SystemTrayIcon) ErrorSlot(v0 error) {
 	if ptr.Pointer() != nil {
-		errC := C.CString(func() string {
-			tmp := err
+		v0C := C.CString(func() string {
+			tmp := v0
 			if tmp != nil {
 				return tmp.Error()
 			}
 			return ""
 		}())
-		defer C.free(unsafe.Pointer(errC))
-		C.SystemTrayIcond8a073_ConnectionDead(ptr.Pointer(), C.struct_Moc_PackedString{data: errC, len: C.longlong(-1)})
+		defer C.free(unsafe.Pointer(v0C))
+		C.SystemTrayIcond8a073_ErrorSlot(ptr.Pointer(), C.struct_Moc_PackedString{data: v0C, len: C.longlong(-1)})
 	}
 }
 
-//export callbackSystemTrayIcond8a073_HideIcon
-func callbackSystemTrayIcond8a073_HideIcon(ptr unsafe.Pointer) {
-	if signal := qt.GetSignal(ptr, "hideIcon"); signal != nil {
+//export callbackSystemTrayIcond8a073_HideIconSlot
+func callbackSystemTrayIcond8a073_HideIconSlot(ptr unsafe.Pointer) {
+	if signal := qt.GetSignal(ptr, "hideIconSlot"); signal != nil {
 		(*(*func())(signal))()
 	}
 
 }
 
-func (ptr *SystemTrayIcon) ConnectHideIcon(f func()) {
+func (ptr *SystemTrayIcon) ConnectHideIconSlot(f func()) {
 	if ptr.Pointer() != nil {
 
-		if signal := qt.LendSignal(ptr.Pointer(), "hideIcon"); signal != nil {
+		if signal := qt.LendSignal(ptr.Pointer(), "hideIconSlot"); signal != nil {
 			f := func() {
 				(*(*func())(signal))()
 				f()
 			}
-			qt.ConnectSignal(ptr.Pointer(), "hideIcon", unsafe.Pointer(&f))
+			qt.ConnectSignal(ptr.Pointer(), "hideIconSlot", unsafe.Pointer(&f))
 		} else {
-			qt.ConnectSignal(ptr.Pointer(), "hideIcon", unsafe.Pointer(&f))
+			qt.ConnectSignal(ptr.Pointer(), "hideIconSlot", unsafe.Pointer(&f))
 		}
 	}
 }
 
-func (ptr *SystemTrayIcon) DisconnectHideIcon() {
+func (ptr *SystemTrayIcon) DisconnectHideIconSlot() {
 	if ptr.Pointer() != nil {
 
-		qt.DisconnectSignal(ptr.Pointer(), "hideIcon")
+		qt.DisconnectSignal(ptr.Pointer(), "hideIconSlot")
 	}
 }
 
-func (ptr *SystemTrayIcon) HideIcon() {
+func (ptr *SystemTrayIcon) HideIconSlot() {
 	if ptr.Pointer() != nil {
-		C.SystemTrayIcond8a073_HideIcon(ptr.Pointer())
+		C.SystemTrayIcond8a073_HideIconSlot(ptr.Pointer())
 	}
 }
 

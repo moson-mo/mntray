@@ -1,6 +1,7 @@
 package tray
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,7 +13,7 @@ import (
 // defaults
 const (
 	dir               = "/mntray"
-	fileSettings      = "/settings.json"
+	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
 	url               = "http://manjaro.moson.eu:10111/news"
 	maxItems          = 10
@@ -20,12 +21,13 @@ const (
 	hideWhenRead      = false
 	autostart         = true
 	errorNotification = true
-	fetchDelay        = 120
+	fetchDelay        = 60
+	branchDetect      = true
 	desktopFile       = `[Desktop Entry]
 Terminal=false
 Name=mntray
 Type=Application
-Exec=/usr/bin/mntray
+Exec=/usr/bin/mntray --delay
 Icon=mntray
 Comment=A Manjaro Linux announcements notification app
 `
@@ -34,34 +36,37 @@ Comment=A Manjaro Linux announcements notification app
 // default categories
 var categories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "manjaro32"}
 
-// Settings to be saved to file
-type settings struct {
-	ServerURL          string
-	MaxArticles        int
-	Categories         []string
-	configDir          string
-	configBaseDir      string
-	configFile         string
-	ArticlesFile       string
-	RefreshInterval    int
-	HideNoNews         bool
-	Autostart          bool
-	ErrorNotifications bool
-	DelayAfterStart    int
+// Config to be saved to file
+type Config struct {
+	ServerURL                  string
+	MaxArticles                int
+	Categories                 []string
+	configDir                  string
+	configBaseDir              string
+	configFile                 string
+	articlesFile               string
+	RefreshInterval            int
+	HideNoNews                 bool
+	Autostart                  bool
+	ErrorNotifications         bool
+	DelayAfterStart            int
+	DetectCategoriesFromBranch bool
+	userBranch                 string
 }
 
-// NewSettings creates settings with default config if not yet existing
-// Otherwise, load settings from file
-func NewSettings() (*settings, error) {
-	s := settings{
-		ServerURL:          url,
-		MaxArticles:        maxItems,
-		Categories:         categories,
-		RefreshInterval:    refreshInterval,
-		HideNoNews:         hideWhenRead,
-		Autostart:          autostart,
-		ErrorNotifications: errorNotification,
-		DelayAfterStart:    fetchDelay,
+// NewConfig creates Config with default config if not yet existing
+// Otherwise, load Config from file
+func NewConfig() (*Config, error) {
+	s := Config{
+		ServerURL:                  url,
+		MaxArticles:                maxItems,
+		Categories:                 categories,
+		RefreshInterval:            refreshInterval,
+		HideNoNews:                 hideWhenRead,
+		Autostart:                  autostart,
+		ErrorNotifications:         errorNotification,
+		DelayAfterStart:            fetchDelay,
+		DetectCategoriesFromBranch: branchDetect,
 	}
 	d, err := createConfigDir()
 	if err != nil {
@@ -69,13 +74,14 @@ func NewSettings() (*settings, error) {
 	}
 	s.configDir = d
 	s.configBaseDir = strings.Replace(d, "/mntray", "", 1)
-	s.configFile = d + fileSettings
-	s.ArticlesFile = d + fileArticles
+	s.configFile = d + fileConfig
+	s.articlesFile = d + fileArticles
+	s.userBranch = getBranch()
 
-	err = s.LoadSettings()
+	err = s.LoadConfig()
 	if err != nil {
 		fmt.Println("No config found. Trying to create default config file")
-		err = s.SaveSettings(false)
+		err = s.SaveConfig(false)
 		if err != nil {
 			return nil, err
 		}
@@ -89,12 +95,12 @@ func NewSettings() (*settings, error) {
 	return &s, nil
 }
 
-// Save saves settings to file
-func (s *settings) SaveSettings(loadBeforeSave bool) error {
+// SaveConfig saves Config to file
+func (s *Config) SaveConfig(loadBeforeSave bool) error {
 	if loadBeforeSave {
-		err := s.LoadSettings()
+		err := s.LoadConfig()
 		if err != nil {
-			print("Settings could not be loaded: " + err.Error())
+			print("Config could not be loaded: " + err.Error())
 		}
 	}
 	b, err := json.MarshalIndent(s, "", "\t")
@@ -113,7 +119,7 @@ func (s *settings) SaveSettings(loadBeforeSave bool) error {
 	return nil
 }
 
-func (s *settings) createDesktopFile() error {
+func (s *Config) createDesktopFile() error {
 	asdir := s.configBaseDir + "/autostart"
 	fileName := asdir + "/mntray.desktop"
 
@@ -156,22 +162,22 @@ func (s *settings) createDesktopFile() error {
 	return nil
 }
 
-// Save saves articles to file
-func (s *settings) SaveArticles(items []article) error {
+// SaveArticles saves Articles to file
+func (s *Config) SaveArticles(items []Article) error {
 	b, err := json.MarshalIndent(items, "", "\t")
 	if err != nil {
 		return err
 	}
 
-	ioutil.WriteFile(s.ArticlesFile, b, 0644)
+	ioutil.WriteFile(s.articlesFile, b, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// Load loads setting from file
-func (s *settings) LoadSettings() error {
+// LoadConfig loads setting from file
+func (s *Config) LoadConfig() error {
 	b, err := ioutil.ReadFile(s.configFile)
 	if err != nil {
 		return err
@@ -183,24 +189,24 @@ func (s *settings) LoadSettings() error {
 	return nil
 }
 
-// Load loads articles from file
-func (s *settings) LoadArticles() ([]article, error) {
-	b, err := ioutil.ReadFile(s.ArticlesFile)
+// LoadArticles loads Articles from file
+func (s *Config) LoadArticles() ([]Article, error) {
+	b, err := ioutil.ReadFile(s.articlesFile)
 	if err != nil {
 		return nil, err
 	}
 
-	articles := &[]article{}
-	err = json.Unmarshal(b, articles)
+	Articles := &[]Article{}
+	err = json.Unmarshal(b, Articles)
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Slice(*articles, func(i, j int) bool {
-		return (*articles)[i].PublishedDate.Unix() < (*articles)[j].PublishedDate.Unix()
+	sort.Slice(*Articles, func(i, j int) bool {
+		return (*Articles)[i].PublishedDate.Unix() < (*Articles)[j].PublishedDate.Unix()
 	})
 
-	return *articles, nil
+	return *Articles, nil
 }
 
 // creates the config dir if not yet existing
@@ -223,4 +229,29 @@ func createConfigDir() (string, error) {
 		}
 	}
 	return d, nil
+}
+
+// get branch from pacman mirrors config file
+func getBranch() string {
+	f, err := os.Open("/etc/pacman-mirrors.conf")
+	if err != nil {
+		fmt.Println("Error getting branch:", err)
+		return ""
+	}
+	defer f.Close()
+
+	s := bufio.NewScanner(f)
+
+	for s.Scan() {
+		line := strings.ToLower(s.Text())
+		if strings.Contains(line, "branch") && len(line) > 0 && line[0] != '#' {
+			b := strings.Split(strings.Replace(line, " ", "", -1), "=")
+			if len(b) > 1 {
+				return strings.Title(b[1])
+			}
+			return ""
+		}
+	}
+	return ""
+
 }

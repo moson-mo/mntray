@@ -21,7 +21,7 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_SystemTrayIcond8a073_t {
-    QByteArrayData data[9];
+    QByteArrayData data[8];
     char stringdata0[75];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
@@ -32,19 +32,17 @@ struct qt_meta_stringdata_SystemTrayIcond8a073_t {
 static const qt_meta_stringdata_SystemTrayIcond8a073_t qt_meta_stringdata_SystemTrayIcond8a073 = {
     {
 QT_MOC_LITERAL(0, 0, 20), // "SystemTrayIcond8a073"
-QT_MOC_LITERAL(1, 21, 11), // "triggerSlot"
-QT_MOC_LITERAL(2, 33, 0), // ""
-QT_MOC_LITERAL(3, 34, 8), // "quintptr"
-QT_MOC_LITERAL(4, 43, 1), // "a"
-QT_MOC_LITERAL(5, 45, 1), // "b"
-QT_MOC_LITERAL(6, 47, 14), // "connectionDead"
-QT_MOC_LITERAL(7, 62, 3), // "err"
-QT_MOC_LITERAL(8, 66, 8) // "hideIcon"
+QT_MOC_LITERAL(1, 21, 14), // "newArticleSlot"
+QT_MOC_LITERAL(2, 36, 0), // ""
+QT_MOC_LITERAL(3, 37, 8), // "quintptr"
+QT_MOC_LITERAL(4, 46, 2), // "v0"
+QT_MOC_LITERAL(5, 49, 2), // "v1"
+QT_MOC_LITERAL(6, 52, 9), // "errorSlot"
+QT_MOC_LITERAL(7, 62, 12) // "hideIconSlot"
 
     },
-    "SystemTrayIcond8a073\0triggerSlot\0\0"
-    "quintptr\0a\0b\0connectionDead\0err\0"
-    "hideIcon"
+    "SystemTrayIcond8a073\0newArticleSlot\0"
+    "\0quintptr\0v0\0v1\0errorSlot\0hideIconSlot"
 };
 #undef QT_MOC_LITERAL
 
@@ -64,11 +62,11 @@ static const uint qt_meta_data_SystemTrayIcond8a073[] = {
  // slots: name, argc, parameters, tag, flags
        1,    2,   29,    2, 0x0a /* Public */,
        6,    1,   34,    2, 0x0a /* Public */,
-       8,    0,   37,    2, 0x0a /* Public */,
+       7,    0,   37,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void, 0x80000000 | 3, QMetaType::Bool,    4,    5,
-    QMetaType::Void, QMetaType::QString,    7,
+    QMetaType::Void, QMetaType::QString,    4,
     QMetaType::Void,
 
        0        // eod
@@ -80,9 +78,9 @@ void SystemTrayIcond8a073::qt_static_metacall(QObject *_o, QMetaObject::Call _c,
         auto *_t = static_cast<SystemTrayIcond8a073 *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->triggerSlot((*reinterpret_cast< quintptr(*)>(_a[1])),(*reinterpret_cast< bool(*)>(_a[2]))); break;
-        case 1: _t->connectionDead((*reinterpret_cast< QString(*)>(_a[1]))); break;
-        case 2: _t->hideIcon(); break;
+        case 0: _t->newArticleSlot((*reinterpret_cast< quintptr(*)>(_a[1])),(*reinterpret_cast< bool(*)>(_a[2]))); break;
+        case 1: _t->errorSlot((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 2: _t->hideIconSlot(); break;
         default: ;
         }
     }
