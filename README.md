@@ -120,7 +120,9 @@ SetCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and filte
 
 #### Settings dialog
 
+![xfce settings](https://github.com/moson-mo/mntray/raw/master/screenshots/xfce_settings.png?inline=true)
 ![kde settings](https://github.com/moson-mo/mntray/raw/master/screenshots/kde_settings.png?inline=true)
+![gnome settings](https://github.com/moson-mo/mntray/raw/master/screenshots/gnome_settings.png?inline=true)
 </br>
 
 ## Thanks to
