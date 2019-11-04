@@ -10,14 +10,15 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>480</height>
+    <height>362</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>mntray - Settings</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="mntray"/>
+   <iconset theme="mntray">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <property name="sizeGripEnabled">
    <bool>false</bool>
@@ -29,7 +30,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>440</y>
+     <y>320</y>
      <width>621</width>
      <height>32</height>
     </rect>
@@ -103,7 +104,7 @@
    <property name="geometry">
     <rect>
      <x>370</x>
-     <y>210</y>
+     <y>100</y>
      <width>256</width>
      <height>192</height>
     </rect>
@@ -122,7 +123,7 @@
    <property name="geometry">
     <rect>
      <x>370</x>
-     <y>180</y>
+     <y>80</y>
      <width>181</width>
      <height>16</height>
     </rect>
@@ -131,13 +132,13 @@
     <string>Selected categories</string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
      <width>621</width>
-     <height>30</height>
+     <height>34</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_3">
@@ -153,13 +154,13 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>11</x>
      <y>51</y>
      <width>345</width>
-     <height>98</height>
+     <height>110</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
@@ -172,9 +173,6 @@
     </item>
     <item row="0" column="2">
      <widget class="QLineEdit" name="txtMaxArticles">
-      <property name="inputMethodHints">
-       <set>Qt::ImhDigitsOnly</set>
-      </property>
       <property name="inputMask">
        <string>99</string>
       </property>
@@ -199,9 +197,6 @@
     </item>
     <item row="1" column="2">
      <widget class="QLineEdit" name="txtRefreshInterval">
-      <property name="inputMethodHints">
-       <set>Qt::ImhDigitsOnly</set>
-      </property>
       <property name="inputMask">
        <string>9999</string>
       </property>
@@ -209,11 +204,11 @@
     </item>
     <item row="2" column="2">
      <widget class="QLineEdit" name="txtDelayStart">
-      <property name="inputMethodHints">
-       <set>Qt::ImhDigitsOnly</set>
-      </property>
       <property name="inputMask">
        <string>9999</string>
+      </property>
+      <property name="frame">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

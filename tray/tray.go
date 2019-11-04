@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"sort"
-	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -15,6 +15,10 @@ import (
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	ui "github.com/therecipe/qt/widgets"
+)
+
+var (
+	ico, icoNew, icoChecked, icoExit, icoUnchecked *gui.QIcon
 )
 
 // SystemTrayIcon is a customized QSystemTrayIcon
@@ -26,10 +30,6 @@ type SystemTrayIcon struct {
 	_ func()              `slot:"hideIconSlot"`
 }
 
-var (
-	ico, icoNew, icoChecked, icoExit, icoUnchecked *gui.QIcon
-)
-
 // TrayIcon is our main struct. It holds a list of articles, the tray icon and menu
 type TrayIcon struct {
 	App             *ui.QApplication
@@ -40,46 +40,22 @@ type TrayIcon struct {
 	Conf            *Config
 	Articles        []Article
 	LastArticle     *Article
+	CSettings       ClientSettings
+	Mutex           *sync.Mutex
 	Delay           bool
-}
-
-type SettingsWidgets struct {
-	btnBox *ui.QDialogButtonBox
-
-	txtURL             *ui.QLineEdit
-	txtDelayStart      *ui.QLineEdit
-	txtRefreshInterval *ui.QLineEdit
-	txtMaxArticles     *ui.QLineEdit
-
-	cbAutostart          *ui.QCheckBox
-	cbErrorNotifications *ui.QCheckBox
-	cbHideWhenRead       *ui.QCheckBox
-	cbSetCatBranch       *ui.QCheckBox
-
-	listCategories *ui.QListWidget
-
-	lblCategories *ui.QLabel
 }
 
 // NewTrayIcon creates a new tray icon
 func NewTrayIcon(delay bool) error {
 	var err error
+	core.QCoreApplication_SetAttribute(core.Qt__AA_ShareOpenGLContexts, true)
 	t := &TrayIcon{
 		App:             ui.NewQApplication(len(os.Args), os.Args),
 		Delay:           delay,
 		Articles:        []Article{},
 		SettingsWidgets: &SettingsWidgets{},
+		Mutex:           &sync.Mutex{},
 	}
-
-	// load settings window
-	t.App.SetQuitOnLastWindowClosed(false)
-	f := core.NewQFile2(":assets/settings.ui")
-	l := uitools.NewQUiLoader(t.App)
-	w := l.Load(f, nil)
-	t.SettingsDialog = ui.NewQDialogFromPointer(w.Pointer())
-	t.SettingsDialog.ConnectFinished(t.onDialogClosed)
-	t.setSettingsWidgets()
-	//t.setSettingsWidgetValues()
 
 	// set icons
 	ico = gui.QIcon_FromTheme2("mntray-regular", gui.NewQIcon5(":assets/images/mntray-regular.png"))
@@ -143,7 +119,7 @@ func (t *TrayIcon) createMenu() {
 	mr.ConnectTriggered(t.onMarkAsReadClicked)
 
 	set := m.AddAction("Settings")
-	set.SetIcon(gui.QIcon_FromTheme("settings"))
+	set.SetIcon(gui.QIcon_FromTheme("gtk-preferences"))
 	set.ConnectTriggered(t.onSettingsClicked)
 
 	quit := m.AddAction("Quit")
@@ -152,125 +128,6 @@ func (t *TrayIcon) createMenu() {
 
 	t.Menu = m
 	t.Icon.SetContextMenu(m)
-}
-
-// assign ui widgets
-func (t *TrayIcon) setSettingsWidgets() {
-	w := t.SettingsWidgets
-	d := t.SettingsDialog
-	w.txtURL = ui.NewQLineEditFromPointer(d.FindChild("txtURL", core.Qt__FindChildrenRecursively).Pointer())
-	w.txtDelayStart = ui.NewQLineEditFromPointer(d.FindChild("txtDelayStart", core.Qt__FindChildrenRecursively).Pointer())
-	w.txtMaxArticles = ui.NewQLineEditFromPointer(d.FindChild("txtMaxArticles", core.Qt__FindChildrenRecursively).Pointer())
-	w.txtRefreshInterval = ui.NewQLineEditFromPointer(d.FindChild("txtRefreshInterval", core.Qt__FindChildrenRecursively).Pointer())
-	w.cbAutostart = ui.NewQCheckBoxFromPointer(d.FindChild("cbAutostart", core.Qt__FindChildrenRecursively).Pointer())
-	w.cbErrorNotifications = ui.NewQCheckBoxFromPointer(d.FindChild("cbErrorNotifications", core.Qt__FindChildrenRecursively).Pointer())
-	w.cbHideWhenRead = ui.NewQCheckBoxFromPointer(d.FindChild("cbHideWhenRead", core.Qt__FindChildrenRecursively).Pointer())
-	w.cbSetCatBranch = ui.NewQCheckBoxFromPointer(d.FindChild("cbSetCatBranch", core.Qt__FindChildrenRecursively).Pointer())
-	w.listCategories = ui.NewQListWidgetFromPointer(d.FindChild("listCategories", core.Qt__FindChildrenRecursively).Pointer())
-	w.btnBox = ui.NewQDialogButtonBoxFromPointer(d.FindChild("buttonBox", core.Qt__FindChildrenRecursively).Pointer())
-	w.lblCategories = ui.NewQLabelFromPointer(d.FindChild("lblCategories", core.Qt__FindChildrenRecursively).Pointer())
-
-	w.cbSetCatBranch.ConnectToggled(t.onSetCategoriesFromBranchToggled)
-	w.btnBox.Button(ui.QDialogButtonBox__Reset).ConnectClicked(t.onResetButtonClicked)
-}
-
-// set ui widget values from config
-func (t *TrayIcon) setSettingsWidgetValues() {
-	w := t.SettingsWidgets
-	c := t.Conf
-	w.txtURL.SetText(c.ServerURL)
-	w.txtDelayStart.SetText(strconv.Itoa(c.DelayAfterStart))
-	w.txtMaxArticles.SetText(strconv.Itoa(c.MaxArticles))
-	w.txtRefreshInterval.SetText(strconv.Itoa(c.RefreshInterval))
-
-	w.cbAutostart.SetChecked(c.Autostart)
-	w.cbErrorNotifications.SetChecked(c.ErrorNotifications)
-	w.cbHideWhenRead.SetChecked(c.HideNoNews)
-	w.cbSetCatBranch.SetChecked(c.SetCategoriesFromBranch)
-
-	w.listCategories.Clear()
-	w.listCategories.AddItems(c.AvailableCategories)
-
-	t.setSettingsCategory(c.SetCategoriesFromBranch)
-}
-
-// set settings dialog categories from conf / based on checkbox
-func (t *TrayIcon) setSettingsCategory(fromBranch bool) {
-	lc := t.SettingsWidgets.listCategories
-	for i := 0; i < lc.Count(); i++ {
-		lc.Item(i).SetSelected(false)
-		lc.Item(i).SetHidden(false)
-	}
-
-	if !fromBranch {
-		for _, c := range t.Conf.Categories {
-			items := lc.FindItems(c, core.Qt__MatchExactly)
-			if len(items) == 1 {
-				items[0].SetSelected(true)
-			}
-		}
-	} else {
-		items := lc.FindItems(" Updates", core.Qt__MatchContains)
-		for _, i := range items {
-			i.SetHidden(true)
-		}
-		for _, c := range append(t.Conf.AddCategoriesBranch, t.Conf.userBranch+" Updates") {
-			items := lc.FindItems(c, core.Qt__MatchExactly)
-			if len(items) == 1 {
-				items[0].SetSelected(true)
-			}
-		}
-	}
-}
-
-// set conf from widget values
-func (t *TrayIcon) setConfFromWidgets() {
-	c := t.Conf
-	w := t.SettingsWidgets
-	c.ServerURL = w.txtURL.Text()
-	c.RefreshInterval, _ = strconv.Atoi(w.txtRefreshInterval.Text())
-	c.MaxArticles, _ = strconv.Atoi(w.txtMaxArticles.Text())
-	c.DelayAfterStart, _ = strconv.Atoi(w.txtDelayStart.Text())
-
-	c.Autostart = w.cbAutostart.IsChecked()
-	c.ErrorNotifications = w.cbErrorNotifications.IsChecked()
-	c.HideNoNews = w.cbHideWhenRead.IsChecked()
-	c.SetCategoriesFromBranch = w.cbSetCatBranch.IsChecked()
-
-	cats := []string{}
-	for i := 0; i < w.listCategories.Count(); i++ {
-		if w.listCategories.Item(i).IsSelected() {
-			cats = append(cats, w.listCategories.Item(i).Text())
-		}
-	}
-	if c.SetCategoriesFromBranch {
-		c.AddCategoriesBranch = cats
-	} else {
-		c.Categories = cats
-	}
-}
-
-// executes when reset button was clicked
-func (t *TrayIcon) onResetButtonClicked(c bool) {
-	t.setSettingsWidgetValues()
-}
-
-// executes when set categories from branch checkbox is toggled
-func (t *TrayIcon) onSetCategoriesFromBranchToggled(checked bool) {
-	t.setSettingsCategory(checked)
-	if checked {
-		t.SettingsWidgets.lblCategories.SetText("Additional categories")
-	} else {
-		t.SettingsWidgets.lblCategories.SetText("Selected categories")
-	}
-}
-
-// executed when Settings dialog is closed
-func (t *TrayIcon) onDialogClosed(code int) {
-	if code == 1 {
-		t.setConfFromWidgets()
-		t.save(false)
-	}
 }
 
 // shows menu on left click
@@ -282,35 +139,50 @@ func (t *TrayIcon) onActivated(r ui.QSystemTrayIcon__ActivationReason) {
 
 // executes when "Settings" is clicked
 func (t *TrayIcon) onSettingsClicked(b bool) {
+	if t.SettingsDialog == nil {
+		// load settings window
+		t.App.SetQuitOnLastWindowClosed(false)
+		f := core.NewQFile2(":assets/settings.ui")
+		l := uitools.NewQUiLoader(t.App)
+		w := l.Load(f, nil)
+		t.SettingsDialog = ui.NewQDialogFromPointer(w.Pointer())
+		t.SettingsDialog.ConnectFinished(t.onDialogClosed)
+		t.assignWidgets()
+	}
 	t.SettingsDialog.Show()
-	t.setSettingsWidgetValues()
+	t.setWidgetValuesFromConf()
 }
 
 // executes when "Mark all as read" is clicked
 func (t *TrayIcon) onMarkAsReadClicked(c bool) {
 	t.markAllRead()
-	t.save(true)
+	t.saveArticles()
 	t.setTrayIcon()
 }
 
 // executes when "Quit" is clicked
 func (t *TrayIcon) onQuitClicked(c bool) {
-	t.save(true)
+	t.saveArticles()
+	t.saveConfig(true)
 	t.App.Quit()
 }
 
-//
+// hide tray icon (main thread)
 func (t *TrayIcon) onHideIcon() {
 	t.Icon.Hide()
 }
 
-// saves articles and config to disk
-func (t *TrayIcon) save(loadBeforeSave bool) {
+// saves articles to disk
+func (t *TrayIcon) saveArticles() {
 	err := t.Conf.SaveArticles(t.Articles)
 	if err != nil {
 		fmt.Println("Could not save articles to disk:", err)
 	}
-	err = t.Conf.SaveConfig(loadBeforeSave)
+}
+
+// saves config to disk
+func (t *TrayIcon) saveConfig(loadBeforeSave bool) {
+	err := t.Conf.SaveConfig(loadBeforeSave)
 	if err != nil {
 		fmt.Println("Could not save settings to disk:", err)
 	}
@@ -351,7 +223,7 @@ func (t *TrayIcon) setTrayIcon() {
 	t.Icon.SetIcon(ico)
 }
 
-// remove items if exceeding maxitems
+// remove items if exceeding maxitems or do not contain our category
 func (t *TrayIcon) cleanupMenu() {
 	sort.Slice(t.Articles, func(i, j int) bool {
 		return t.Articles[i].PublishedDate.Unix() < t.Articles[j].PublishedDate.Unix()
@@ -405,7 +277,7 @@ func (t *TrayIcon) openArticle(a Article) {
 	com := exec.Command("xdg-open", a.URL)
 	com.Start()
 	t.markRead(a)
-	t.save(true)
+	t.saveArticles()
 	t.setTrayIcon()
 }
 
@@ -473,4 +345,17 @@ func (t *TrayIcon) handleOSSignals() {
 	s := <-c
 	fmt.Println("Got signal:", s)
 	t.onQuitClicked(true)
+}
+
+// checks if two string slices are equal
+func stringSEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }

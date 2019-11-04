@@ -89,11 +89,8 @@ func NewConfig() (*Config, error) {
 	err = s.LoadConfig()
 	if err != nil {
 		fmt.Println("No config found. Trying to create default config file")
-		err = s.SaveConfig(false)
-		if err != nil {
-			return nil, err
-		}
 	}
+
 	replaceDesktopFile := false
 
 	if s.Version == "" {
@@ -105,6 +102,11 @@ func NewConfig() (*Config, error) {
 	err = s.createDesktopFile(replaceDesktopFile)
 	if err != nil {
 		print(err)
+	}
+
+	err = s.SaveConfig(false)
+	if err != nil {
+		return nil, err
 	}
 
 	return &s, nil
@@ -221,11 +223,28 @@ func (s *Config) LoadArticles() ([]Article, error) {
 		return nil, err
 	}
 
-	sort.Slice(*Articles, func(i, j int) bool {
-		return (*Articles)[i].PublishedDate.Unix() < (*Articles)[j].PublishedDate.Unix()
+	filteredArticles := []Article{}
+	var catList []string
+
+	if s.SetCategoriesFromBranch {
+		catList = append(s.AddCategoriesBranch, s.userBranch+" Updates")
+	} else {
+		catList = s.Categories
+	}
+
+	for _, a := range *Articles {
+		for _, c := range catList {
+			if c == a.Category {
+				filteredArticles = append(filteredArticles, a)
+			}
+		}
+	}
+
+	sort.Slice(filteredArticles, func(i, j int) bool {
+		return filteredArticles[i].PublishedDate.Unix() < filteredArticles[j].PublishedDate.Unix()
 	})
 
-	return *Articles, nil
+	return filteredArticles, nil
 }
 
 // creates the config dir if not yet existing
