@@ -12,12 +12,12 @@ import (
 
 // defaults
 const (
-	version           = "0.2.0"
+	version           = "0.3.0"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
 	url               = "http://manjaro.moson.eu:10111/news"
-	maxItems          = 10
+	maxItems          = 15
 	refreshInterval   = 600
 	hideWhenRead      = false
 	autostart         = true
@@ -35,13 +35,18 @@ Comment=A Manjaro Linux announcements notification app
 )
 
 // default categories
-var categories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "manjaro32"}
+var categories = []string{"All"}
+var availableCategories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "manjaro32", "Twitter"}
+var addCategoriesBranch = []string{"Announcements"}
 
 // Config to be saved to file
 type Config struct {
+	Version                 string
 	ServerURL               string
 	MaxArticles             int
+	AvailableCategories     []string
 	Categories              []string
+	AddCategoriesBranch     []string
 	configDir               string
 	configBaseDir           string
 	configFile              string
@@ -52,7 +57,6 @@ type Config struct {
 	ErrorNotifications      bool
 	DelayAfterStart         int
 	SetCategoriesFromBranch bool
-	Version                 string
 	userBranch              string
 }
 
@@ -63,6 +67,8 @@ func NewConfig() (*Config, error) {
 		ServerURL:               url,
 		MaxArticles:             maxItems,
 		Categories:              categories,
+		AvailableCategories:     availableCategories,
+		AddCategoriesBranch:     addCategoriesBranch,
 		RefreshInterval:         refreshInterval,
 		HideNoNews:              hideWhenRead,
 		Autostart:               autostart,
@@ -146,7 +152,7 @@ func (s *Config) createDesktopFile(replace bool) error {
 
 	// create file (if not yet existing)
 	if s.Autostart {
-		// delete previous desktop file (needed for migration to v0.2.0)
+		// delete previous desktop file (needed for migration to v0.2.x)
 		if replace {
 			os.Remove(fileName) // we don't care about errors
 		}

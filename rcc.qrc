@@ -2,5 +2,6 @@
 <qresource>
 <file>assets/images/mntray-news.png</file>
 <file>assets/images/mntray-regular.png</file>
+<file>assets/settings.ui</file>
 </qresource>
 </RCC>
