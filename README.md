@@ -46,19 +46,31 @@ For further information & cross compilation options please have a look at [this 
 ## Configuration
 
 On the first startup a config file (`~/.config/mntray/settings.json`) is created with some default settings.
-When you want to chang settings, make sure the app is not running since it will save settings on exit and overwrite your changes.
+You can either use the GUI to change the configuration (open "Settings" from the menu) or edit the config file.
 
 ```
 {
 	"Version": "0.2.0"
 	"ServerURL": "http://manjaro.moson.eu:10111/news",
 	"MaxArticles": 10,
+	"AvailableCategories": [
+		"Testing Updates",
+		"Stable Updates",
+		"Unstable Updates",
+		"Announcements",
+		"manjaro32",
+		"Twitter"
+	],
 	"Categories": [
 		"Testing Updates",
 		"Stable Updates",
 		"Unstable Updates",
 		"Announcements",
 		"manjaro32"
+	],
+	"AddCategoriesBranch": [
+		"Announcements",
+		"Twitter"
 	],
 	"RefreshInterval": 600,
 	"HideNoNews": false,
@@ -74,7 +86,9 @@ Option | Description
 Version| Version number. Do not change!|
 URL| WebSocket URL of the mnservice server|
 MaxArticles| The maximum number of articles to retrieve / show in the menu|
+AvailableCategories| The categories that available for subscription. Do not change!|
 Categories| The categories you want to get announcements for</br>Remove unwanted categories if needed</br></br>**note:* Is ignored when SetCategoriesFromBranch is "true"|
+AddCategoriesBranch| The categories you want to get announcements for</br>additional to the branch you are using</br></br>**note:* Is ignored when SetCategoriesFromBranch is "false"|
 RefreshInterval| The interval (in seconds) in which mntray will check for new articles|
 Autostart| Places a .desktop file in the users autostart folder when "true"|
 HideNoNews| When set to "true", the tray icon is hidden when all news have been read</br></br>**note:* Does not work reliably on GNOME & KDE. See "Known issues"|
@@ -104,6 +118,11 @@ SetCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and filte
 ![gnome notification](https://github.com/moson-mo/mntray/raw/master/screenshots/gnome_notification.png?inline=true)
 </br>
 
+#### Settings dialog
+
+![kde settings](https://github.com/moson-mo/mntray/raw/master/screenshots/kde_settings.png?inline=true)
+</br>
+
 ## Thanks to
 
 * The Manjaro Team for the great distro
@@ -116,9 +135,7 @@ SetCategoriesFromBranch| If "true", it auto-detects the Manjaro branch and filte
 
 ## Todo / Plans
 
-* Unit tests
-* Integrate twitter news
-* GUI settings editor
+* Write tests
 </br>
 
 ## Known issues

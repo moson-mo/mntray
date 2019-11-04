@@ -103,7 +103,11 @@ func (t *TrayIcon) setConfFromWidgets() {
 	w := t.SettingsWidgets
 	c.ServerURL = w.txtURL.Text()
 	c.RefreshInterval, _ = strconv.Atoi(w.txtRefreshInterval.Text())
-	c.MaxArticles, _ = strconv.Atoi(w.txtMaxArticles.Text())
+	maxA, _ := strconv.Atoi(w.txtMaxArticles.Text())
+	if maxA > c.MaxArticles {
+		restartRequired = true
+	}
+	c.MaxArticles = maxA
 	c.DelayAfterStart, _ = strconv.Atoi(w.txtDelayStart.Text())
 
 	c.Autostart = w.cbAutostart.IsChecked()
@@ -134,7 +138,7 @@ func (t *TrayIcon) setConfFromWidgets() {
 	}
 	if restartRequired {
 		fmt.Println("restart required")
-		t.Icon.ShowMessage2("Manjaro News - Information", "Categories have changed. Please restart me!", ico, 10000)
+		t.Icon.ShowMessage2("Manjaro News - Information", "You've changed setting which require a restart of mntray. Please restart me.", ico, 5000)
 	}
 }
 
@@ -158,5 +162,7 @@ func (t *TrayIcon) onDialogClosed(code int) {
 	if code == 1 {
 		t.setConfFromWidgets()
 		t.saveConfig(false)
+		t.cleanupMenu()
+		t.setTrayIcon()
 	}
 }
