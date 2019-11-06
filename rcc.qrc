@@ -1,7 +1,9 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource>
-<file>assets/images/mntray-news.png</file>
-<file>assets/images/mntray-regular.png</file>
-<file>assets/settings.ui</file>
-</qresource>
+<RCC>
+  <qresource>
+    <file>assets/images/mntray.png</file>
+    <file>assets/images/mntray-news.png</file>
+    <file>assets/images/mntray-regular.png</file>
+    <file>assets/ui/settings.ui</file>
+    <file>assets/ui/about.ui</file>
+  </qresource>
 </RCC>

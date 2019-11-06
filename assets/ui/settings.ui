@@ -107,7 +107,7 @@
     </rect>
    </property>
    <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hides the tray icon when all articles are marked as read. When a new article arrives the icon will be shown again.&lt;/p&gt;&lt;p&gt;*Note that this option does not work properly in KDE and GNOME environments.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hides the tray icon when all articles are marked as read. When a new article arrives the icon will be shown again.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;Note that this option does not work properly in KDE and GNOME environments.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="text">
     <string>Hide when all articles have been read</string>

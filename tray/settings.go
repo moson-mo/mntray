@@ -158,11 +158,9 @@ func (t *TrayIcon) onSetCategoriesFromBranchToggled(checked bool) {
 }
 
 // executed when Settings dialog is closed
-func (t *TrayIcon) onDialogClosed(code int) {
-	if code == 1 {
-		t.setConfFromWidgets()
-		t.saveConfig(false)
-		t.cleanupMenu()
-		t.setTrayIcon()
-	}
+func (t *TrayIcon) onDialogAccepted() {
+	t.setConfFromWidgets()
+	t.saveConfig(false)
+	t.cleanupMenu()
+	t.setTrayIcon()
 }

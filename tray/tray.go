@@ -36,6 +36,7 @@ type TrayIcon struct {
 	Icon            *SystemTrayIcon
 	Menu            *ui.QMenu
 	SettingsDialog  *ui.QDialog
+	AboutDialog     *ui.QDialog
 	SettingsWidgets *SettingsWidgets
 	Conf            *Config
 	Articles        []Article
@@ -56,6 +57,9 @@ func NewTrayIcon(delay bool) error {
 		SettingsWidgets: &SettingsWidgets{},
 		Mutex:           &sync.Mutex{},
 	}
+	t.App.SetQuitOnLastWindowClosed(false)
+	t.App.SetApplicationName("mntray")
+	t.App.SetApplicationVersion(version)
 
 	// set icons
 	ico = gui.QIcon_FromTheme2("mntray-regular", gui.NewQIcon5(":assets/images/mntray-regular.png"))
@@ -122,6 +126,11 @@ func (t *TrayIcon) createMenu() {
 	set.SetIcon(gui.QIcon_FromTheme("gtk-preferences"))
 	set.ConnectTriggered(t.onSettingsClicked)
 
+	ab := m.AddAction("About")
+	ab.SetIcon(gui.QIcon_FromTheme("gtk-about"))
+	ab.ConnectTriggered(t.onAboutClicked)
+
+	m.AddSeparator()
 	quit := m.AddAction("Quit")
 	quit.SetIcon(icoExit)
 	quit.ConnectTriggered(t.onQuitClicked)
@@ -141,16 +150,33 @@ func (t *TrayIcon) onActivated(r ui.QSystemTrayIcon__ActivationReason) {
 func (t *TrayIcon) onSettingsClicked(b bool) {
 	if t.SettingsDialog == nil {
 		// load settings window
-		t.App.SetQuitOnLastWindowClosed(false)
-		f := core.NewQFile2(":assets/settings.ui")
+		f := core.NewQFile2(":assets/ui/settings.ui")
 		l := uitools.NewQUiLoader(t.App)
 		w := l.Load(f, nil)
 		t.SettingsDialog = ui.NewQDialogFromPointer(w.Pointer())
-		t.SettingsDialog.ConnectFinished(t.onDialogClosed)
+		t.SettingsDialog.ConnectAccepted(t.onDialogAccepted)
 		t.assignWidgets()
 	}
 	t.SettingsDialog.Show()
 	t.setWidgetValuesFromConf()
+}
+
+// executes when "About" is clicked
+func (t *TrayIcon) onAboutClicked(b bool) {
+	if t.AboutDialog == nil {
+		// load about window
+		f := core.NewQFile2(":assets/ui/about.ui")
+		l := uitools.NewQUiLoader(t.App)
+		w := l.Load(f, nil)
+		t.AboutDialog = ui.NewQDialogFromPointer(w.Pointer())
+		t.AboutDialog.ConnectDestroyed(func(o *core.QObject) {
+			fmt.Println("destroyed about")
+		})
+		t.AboutDialog.ConnectDestroyQDialog(func() {
+			fmt.Println("destroying about")
+		})
+	}
+	t.AboutDialog.Show()
 }
 
 // executes when "Mark all as read" is clicked
