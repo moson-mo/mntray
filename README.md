@@ -5,7 +5,7 @@
 </br>
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/moson-mo/mntray)](https://goreportcard.com/report/github.com/moson-mo/mntray)
-
+[![GitHub release](https://img.shields.io/github/v/tag/moson-mo/mntray.svg?label=release&sort=semver)](https://github.com/moson-mo/mntray/releases)
 
 A small app which informs about announcements from manjaro.\
 It creates a tray icon with a menu showing the latest announcements from the Manjaro forum RSS feed.

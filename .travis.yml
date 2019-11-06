@@ -1,0 +1,13 @@
+sudo: required
+language: go
+go:
+- 1.13.x
+services:
+- docker
+
+install:
+- docker pull therecipe/qt:linux
+- go get -u -v github.com/therecipe/qt/cmd/...
+
+script:
+- $GOPATH/bin/qtdeploy -docker build linux
