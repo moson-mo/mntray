@@ -327,7 +327,7 @@ func (t *TrayIcon) addMenuItem(a Article) *ui.QAction {
 	return item
 }
 
-// when an article has been recieved
+// when an article has been received
 func (t *TrayIcon) onNewArticle(a Article, fromFile bool) {
 	a.mi = t.addMenuItem(a)
 	t.Articles = append(t.Articles, a)
@@ -342,7 +342,7 @@ func (t *TrayIcon) onNewArticle(a Article, fromFile bool) {
 	}
 }
 
-// when an error has occured
+// when an error has occurred
 func (t *TrayIcon) onError(err error) {
 	t.LastArticle = nil
 	if t.Conf.HideNoNews {

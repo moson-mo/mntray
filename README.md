@@ -4,6 +4,9 @@
 ## A Manjaro Linux announcements notification app
 </br>
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/moson-mo/mntray)](https://goreportcard.com/report/github.com/moson-mo/mntray)
+
+
 A small app which informs about announcements from manjaro.\
 It creates a tray icon with a menu showing the latest announcements from the Manjaro forum RSS feed.
 
