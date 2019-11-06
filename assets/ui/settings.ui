@@ -35,7 +35,8 @@
    <string>Settings</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="mntray"/>
+   <iconset theme="mntray">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <property name="sizeGripEnabled">
    <bool>false</bool>
@@ -263,6 +264,17 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>txtURL</tabstop>
+  <tabstop>txtMaxArticles</tabstop>
+  <tabstop>txtRefreshInterval</tabstop>
+  <tabstop>txtDelayStart</tabstop>
+  <tabstop>cbAutostart</tabstop>
+  <tabstop>cbErrorNotifications</tabstop>
+  <tabstop>cbHideWhenRead</tabstop>
+  <tabstop>cbSetCatBranch</tabstop>
+  <tabstop>listCategories</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

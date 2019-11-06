@@ -29,7 +29,8 @@
    <string>About</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="mntray"/>
+   <iconset theme="mntray">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -63,7 +64,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="../rcc.qrc">:/assets/images/mntray.png</pixmap>
+    <pixmap resource="../../rcc.qrc">:/assets/images/mntray.png</pixmap>
    </property>
   </widget>
   <widget class="QLabel" name="lblApp">
@@ -97,6 +98,7 @@
   </widget>
  </widget>
  <resources>
+  <include location="../../rcc.qrc"/>
   <include location="../rcc.qrc"/>
  </resources>
  <connections>
