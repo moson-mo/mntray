@@ -4,6 +4,7 @@
 ## A Manjaro Linux announcements notification app
 </br>
 
+[![Build Status](https://travis-ci.org/moson-mo/mntray.svg?branch=master)](https://travis-ci.org/moson-mo/mntray)
 [![Go Report Card](https://goreportcard.com/badge/github.com/moson-mo/mntray)](https://goreportcard.com/report/github.com/moson-mo/mntray)
 [![GitHub release](https://img.shields.io/github/v/tag/moson-mo/mntray.svg?label=release&sort=semver)](https://github.com/moson-mo/mntray/releases)
 
