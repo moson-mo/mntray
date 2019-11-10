@@ -26,12 +26,7 @@ func (t *TrayIcon) waitForNews() {
 
 		// set categories according to branch if configured
 		if t.Conf.SetCategoriesFromBranch {
-			if t.Conf.userBranch == "" {
-				fmt.Println("Could not detect branch, going for stable updates")
-				cs.Categories = append(t.Conf.AddCategoriesBranch, "Stable Updates")
-			} else {
-				cs.Categories = append(t.Conf.AddCategoriesBranch, t.Conf.userBranch+" Updates")
-			}
+			cs.Categories = append(t.Conf.AddCategoriesBranch, t.Conf.userBranch+" Updates")
 		}
 
 		b, _ := json.Marshal(cs)

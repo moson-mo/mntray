@@ -85,6 +85,10 @@ func NewConfig() (*Config, error) {
 	s.configFile = d + fileConfig
 	s.articlesFile = d + fileArticles
 	s.userBranch = getBranch()
+	if s.userBranch == "" {
+		fmt.Println("Could not detect branch, assuming \"Stable\"")
+		s.userBranch = "Stable"
+	}
 
 	err = s.LoadConfig()
 	if err != nil {
