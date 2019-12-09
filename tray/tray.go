@@ -301,7 +301,9 @@ func (t *TrayIcon) gotNewArticle(a Article, fromFile bool) {
 // opens the article in the default browser
 func (t *TrayIcon) openArticle(a Article) {
 	com := exec.Command("xdg-open", a.URL)
-	com.Start()
+	go func() {
+		com.Run()
+	}()
 	t.markRead(a)
 	t.saveArticles()
 	t.setTrayIcon()
