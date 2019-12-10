@@ -50,6 +50,7 @@ type TrayIcon struct {
 func NewTrayIcon(delay bool) error {
 	var err error
 	core.QCoreApplication_SetAttribute(core.Qt__AA_ShareOpenGLContexts, true)
+	core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
 	t := &TrayIcon{
 		App:             ui.NewQApplication(len(os.Args), os.Args),
 		Delay:           delay,
