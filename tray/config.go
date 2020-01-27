@@ -12,7 +12,7 @@ import (
 
 // defaults
 const (
-	version           = "1.0.2"
+	version           = "1.0.3"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
@@ -36,7 +36,7 @@ Comment=A Manjaro Linux announcements notification app
 
 // default categories
 var categories = []string{"All"}
-var availableCategories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "manjaro32", "Twitter"}
+var availableCategories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "manjaro32", "Twitter", "News", "Releases"}
 var addCategoriesBranch = []string{"Announcements"}
 
 // Config to be saved to file
@@ -99,6 +99,11 @@ func NewConfig() (*Config, error) {
 
 	if s.Version == "" {
 		replaceDesktopFile = true
+	}
+
+	// add additional categories with new version
+	if s.Version == "1.0.2" {
+		s.AvailableCategories = availableCategories
 	}
 
 	s.Version = version
