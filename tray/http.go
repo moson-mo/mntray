@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"time"
 )
 
@@ -26,7 +27,11 @@ func (t *TrayIcon) waitForNews() {
 
 		// set categories according to branch if configured
 		if t.Conf.SetCategoriesFromBranch {
-			cs.Categories = append(t.Conf.AddCategoriesBranch, t.Conf.userBranch+" Updates")
+			arch := ""
+			if runtime.GOARCH == "arm64" {
+				arch = "ARM "
+			}
+			cs.Categories = append(t.Conf.AddCategoriesBranch, arch+t.Conf.userBranch+" Updates")
 		}
 
 		b, _ := json.Marshal(cs)

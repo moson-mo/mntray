@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 )
 
 // defaults
 const (
-	version           = "1.0.3"
+	version           = "1.1.0"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
@@ -36,7 +37,7 @@ Comment=A Manjaro Linux announcements notification app
 
 // default categories
 var categories = []string{"All"}
-var availableCategories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "manjaro32", "Twitter", "News", "Releases"}
+var availableCategories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "Twitter", "News", "Releases", "ARM Announcements", "ARM Releases", "ARM Stable Updates", "ARM Testing Updates"}
 var addCategoriesBranch = []string{"Announcements"}
 
 // Config to be saved to file
@@ -67,7 +68,7 @@ func NewConfig() (*Config, error) {
 		ServerURL:               url,
 		MaxArticles:             maxItems,
 		Categories:              categories,
-		AvailableCategories:     availableCategories,
+		AvailableCategories:     append(availableCategories[:0:0], availableCategories...),
 		AddCategoriesBranch:     addCategoriesBranch,
 		RefreshInterval:         refreshInterval,
 		HideNoNews:              hideWhenRead,
@@ -102,7 +103,7 @@ func NewConfig() (*Config, error) {
 	}
 
 	// add additional categories with new version
-	if s.Version == "1.0.2" {
+	if s.Version != "1.1.0" {
 		s.AvailableCategories = availableCategories
 	}
 
@@ -236,7 +237,11 @@ func (s *Config) LoadArticles() ([]Article, error) {
 	var catList []string
 
 	if s.SetCategoriesFromBranch {
-		catList = append(s.AddCategoriesBranch, s.userBranch+" Updates")
+		arch := ""
+		if runtime.GOARCH == "arm64" {
+			arch = "ARM "
+		}
+		catList = append(s.AddCategoriesBranch, arch+s.userBranch+" Updates")
 	} else {
 		catList = s.Categories
 	}
@@ -294,7 +299,7 @@ func getBranch() string {
 		if strings.Contains(line, "branch") && len(line) > 0 && line[0] != '#' {
 			b := strings.Split(strings.Replace(line, " ", "", -1), "=")
 			if len(b) > 1 {
-				return strings.Title(b[1])
+				return strings.Replace(strings.Title(b[1]), "Arm-", "", -1)
 			}
 			return ""
 		}
