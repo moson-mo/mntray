@@ -13,7 +13,7 @@ import (
 
 // defaults
 const (
-	version           = "1.1.0"
+	version           = "1.1.1"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
@@ -150,13 +150,13 @@ func (s *Config) createDesktopFile(replace bool) error {
 	asdir := s.configBaseDir + "/autostart"
 	fileName := asdir + "/mntray.desktop"
 
-	// make sure we have an autostart dir (might be useless?)
+	// make sure we have an autostart dir
 	_, err := os.Stat(asdir)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
-		err = os.Mkdir(asdir, 0644)
+		err = os.Mkdir(asdir, 0755)
 		if err != nil {
 			return err
 		}
@@ -174,9 +174,9 @@ func (s *Config) createDesktopFile(replace bool) error {
 				return err
 			}
 
-			err = ioutil.WriteFile(fileName, []byte(desktopFile), 0755)
+			err = ioutil.WriteFile(fileName, []byte(desktopFile), 0644)
 			if err != nil {
-				return err
+				print(err)
 			}
 		}
 	} else { // remove file if existing
