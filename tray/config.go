@@ -13,7 +13,7 @@ import (
 
 // defaults
 const (
-	version           = "1.1.1"
+	version           = "1.1.2"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
@@ -37,7 +37,7 @@ Comment=A Manjaro Linux announcements notification app
 
 // default categories
 var categories = []string{"All"}
-var availableCategories = []string{"Testing Updates", "Stable Updates", "Unstable Updates", "Announcements", "Twitter", "News", "Releases", "ARM Announcements", "ARM Releases", "ARM Stable Updates", "ARM Testing Updates"}
+var availableCategories = []string{"Testing Updates", "Stable Updates", "Stable Staging Updates", "Unstable Updates", "Announcements", "Twitter", "News", "Releases", "ARM Announcements", "ARM Releases", "ARM Stable Updates", "ARM Testing Updates"}
 var addCategoriesBranch = []string{"Announcements"}
 
 // Config to be saved to file
@@ -102,8 +102,12 @@ func NewConfig() (*Config, error) {
 		replaceDesktopFile = true
 	}
 
+	v, err := strconv.Atoi(strings.Replace(s.Version, ".", "", -1)
+	if err != nil {
+		v = 0
+	}
 	// add additional categories with new version
-	if s.Version != "1.1.0" {
+	if v < 112 {
 		s.AvailableCategories = availableCategories
 	}
 
@@ -299,7 +303,7 @@ func getBranch() string {
 		if strings.Contains(line, "branch") && len(line) > 0 && line[0] != '#' {
 			b := strings.Split(strings.Replace(line, " ", "", -1), "=")
 			if len(b) > 1 {
-				return strings.Replace(strings.Title(b[1]), "Arm-", "", -1)
+				return strings.Replace(strings.Replace(strings.Title(b[1]), "Arm-", "", -1), "-", " ", -1)
 			}
 			return ""
 		}
