@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -102,7 +103,7 @@ func NewConfig() (*Config, error) {
 		replaceDesktopFile = true
 	}
 
-	v, err := strconv.Atoi(strings.Replace(s.Version, ".", "", -1)
+	v, err := strconv.Atoi(strings.Replace(s.Version, ".", "", -1))
 	if err != nil {
 		v = 0
 	}
