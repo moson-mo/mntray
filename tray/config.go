@@ -38,7 +38,7 @@ Comment=A Manjaro Linux announcements notification app
 
 // default categories
 var categories = []string{"All"}
-var availableCategories = []string{"Testing Updates", "Stable Updates", "Stable Staging Updates", "Unstable Updates", "Announcements", "Twitter", "News", "Releases", "ARM Announcements", "ARM Releases", "ARM Stable Updates", "ARM Testing Updates"}
+var availableCategories = []string{"Testing Updates", "Stable Updates", "Stable Staging Updates", "Unstable Updates", "Twitter", "News", "Releases", "ARM News", "ARM Releases", "ARM Stable Updates", "ARM Testing Updates", "ARM Unstable Updates"}
 var addCategoriesBranch = []string{"Announcements"}
 
 // Config to be saved to file
