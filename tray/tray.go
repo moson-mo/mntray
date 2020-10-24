@@ -143,7 +143,7 @@ func (t *TrayIcon) createMenu() {
 // shows menu on left click
 func (t *TrayIcon) onActivated(r ui.QSystemTrayIcon__ActivationReason) {
 	if r == ui.QSystemTrayIcon__Trigger {
-		t.Menu.Exec2(gui.QCursor_Pos(), nil)
+		t.Menu.Popup(gui.QCursor_Pos(), nil)
 	}
 }
 

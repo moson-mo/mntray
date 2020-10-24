@@ -14,7 +14,7 @@ import (
 
 // defaults
 const (
-	version           = "1.1.2"
+	version           = "1.1.3"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"
@@ -34,6 +34,7 @@ Exec=/usr/bin/mntray --delay
 Icon=mntray
 Comment=A Manjaro Linux announcements notification app
 `
+	noAuto = "Hidden=true"
 )
 
 // default categories
@@ -60,6 +61,7 @@ type Config struct {
 	DelayAfterStart         int
 	SetCategoriesFromBranch bool
 	userBranch              string
+	autostartChanged        bool
 }
 
 // NewConfig creates Config with default config if not yet existing
@@ -77,6 +79,7 @@ func NewConfig() (*Config, error) {
 		ErrorNotifications:      errorNotification,
 		DelayAfterStart:         fetchDelay,
 		SetCategoriesFromBranch: branchDetect,
+		autostartChanged:        false,
 	}
 	d, err := createConfigDir()
 	if err != nil {
@@ -95,12 +98,7 @@ func NewConfig() (*Config, error) {
 	err = s.LoadConfig()
 	if err != nil {
 		fmt.Println("No config found. Trying to create default config file")
-	}
-
-	replaceDesktopFile := false
-
-	if s.Version == "" {
-		replaceDesktopFile = true
+		s.autostartChanged = true
 	}
 
 	v, err := strconv.Atoi(strings.Replace(s.Version, ".", "", -1))
@@ -114,7 +112,7 @@ func NewConfig() (*Config, error) {
 
 	s.Version = version
 
-	err = s.createDesktopFile(replaceDesktopFile)
+	err = s.createDesktopFile()
 	if err != nil {
 		print(err)
 	}
@@ -144,14 +142,14 @@ func (s *Config) SaveConfig(loadBeforeSave bool) error {
 		return err
 	}
 
-	err = s.createDesktopFile(false)
+	err = s.createDesktopFile()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Config) createDesktopFile(replace bool) error {
+func (s *Config) createDesktopFile() error {
 	asdir := s.configBaseDir + "/autostart"
 	fileName := asdir + "/mntray.desktop"
 
@@ -167,30 +165,36 @@ func (s *Config) createDesktopFile(replace bool) error {
 		}
 	}
 
-	// create file (if not yet existing)
-	if s.Autostart {
-		// delete previous desktop file (needed for migration to v0.2.x)
-		if replace {
-			os.Remove(fileName) // we don't care about errors
+	// if autostart file is not present, make sure to create it
+	_, err = os.Stat(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			s.autostartChanged = true
 		}
-		_, err := os.Stat(fileName)
+	}
+
+	// if autostart setting has changed, recreate the .desktop file
+	if s.autostartChanged {
+		// delete previous desktop file
+		os.Remove(fileName)
+
+		_, err = os.Stat(fileName)
 		if err != nil {
 			if !os.IsNotExist(err) {
 				return err
 			}
 
-			err = ioutil.WriteFile(fileName, []byte(desktopFile), 0644)
+			var fb []byte
+
+			if s.Autostart {
+				fb = []byte(desktopFile)
+			} else {
+				fb = []byte(desktopFile + noAuto)
+			}
+
+			err = ioutil.WriteFile(fileName, fb, 0644)
 			if err != nil {
 				print(err)
-			}
-		}
-	} else { // remove file if existing
-		_, err := os.Stat(fileName)
-		if err == nil {
-			fmt.Println("removing desktop file")
-			err = os.Remove(fileName)
-			if err != nil {
-				return err
 			}
 		}
 	}

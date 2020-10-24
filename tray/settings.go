@@ -110,6 +110,10 @@ func (t *TrayIcon) setConfFromWidgets() {
 	c.MaxArticles = maxA
 	c.DelayAfterStart, _ = strconv.Atoi(w.txtDelayStart.Text())
 
+	if c.Autostart != w.cbAutostart.IsChecked() {
+		c.autostartChanged = true
+	}
+
 	c.Autostart = w.cbAutostart.IsChecked()
 	c.ErrorNotifications = w.cbErrorNotifications.IsChecked()
 	c.HideNoNews = w.cbHideWhenRead.IsChecked()
