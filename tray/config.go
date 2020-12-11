@@ -14,7 +14,7 @@ import (
 
 // defaults
 const (
-	version           = "1.1.3"
+	version           = "1.1.4"
 	dir               = "/mntray"
 	fileConfig        = "/settings.json"
 	fileArticles      = "/articles.json"

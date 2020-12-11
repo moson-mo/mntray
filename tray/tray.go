@@ -100,6 +100,9 @@ func NewTrayIcon(delay bool) error {
 	}
 
 	// show icon
+	for !t.Icon.IsSystemTrayAvailable() {
+		time.Sleep(100 * time.Millisecond)
+	}
 	t.Icon.Show()
 	t.setTrayIcon()
 
