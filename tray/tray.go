@@ -70,6 +70,9 @@ func NewTrayIcon(delay bool) error {
 	icoUnchecked = gui.QIcon_FromTheme2("vcs-removed", gui.QIcon_FromTheme("emblem-draft"))
 
 	// create icon
+	for !ui.QSystemTrayIcon_IsSystemTrayAvailable() {
+		time.Sleep(100 * time.Millisecond)
+	}
 	t.Icon = NewSystemTrayIcon(t.App)
 	t.Icon.SetIcon(ico)
 	t.Conf, err = NewConfig()
@@ -99,10 +102,6 @@ func NewTrayIcon(delay bool) error {
 		t.gotNewArticle(arts[i], true)
 	}
 
-	// show icon
-	for !t.Icon.IsSystemTrayAvailable() {
-		time.Sleep(100 * time.Millisecond)
-	}
 	t.Icon.Show()
 	t.setTrayIcon()
 
